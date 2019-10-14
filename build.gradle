@@ -9,8 +9,10 @@ sourceCompatibility = 1.8
 
 repositories {
     mavenCentral()
+    maven { url "http://dialog.bintray.com/maven" }
 }
 
 dependencies {
-    testCompile group: 'junit', name: 'junit', version: '4.12'
+    compile 'im.dlg:bot-sdk:1.2'
+    testCompile group: 'junit', name: 'junit', version: '5.3.1'
 }
