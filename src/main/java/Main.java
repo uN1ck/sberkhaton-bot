@@ -1,4 +1,5 @@
 import java.util.concurrent.ExecutionException;
+
 import im.dlg.botsdk.Bot;
 import im.dlg.botsdk.BotConfig;
 
@@ -10,6 +11,8 @@ public class Main {
                 .withHost("grpc-test.transmit.im")
                 .withPort(9443)
                 .withToken("e60137c00345e62ea8a21506cfe31b2be10852ec").build();
+
+        Bot bot = Bot.start(botConfig).get();
 
         bot.messaging().onMessage(message ->
                 bot.users().get(message.getSender()).thenAccept(userOpt -> userOpt.ifPresent(user -> {
