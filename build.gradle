@@ -14,5 +14,10 @@ repositories {
 
 dependencies {
     compile 'im.dlg:bot-sdk:1.2'
-    testCompile group: 'junit', name: 'junit', version: '5.3.1'
+    testImplementation 'junit:junit:4.12'
+}
+
+test {
+    useJUnit()
+    maxHeapSize = '1G'
 }
