@@ -13,7 +13,7 @@ public class MainService {
         BotConfig botConfig = BotConfig.Builder.aBotConfig()
                 .withHost("grpc-test.transmit.im")
                 .withPort(9443)
-                .withToken("sometoken").build();
+                .withToken("").build();
 
         Bot bot = Bot.start(botConfig).get();
 
