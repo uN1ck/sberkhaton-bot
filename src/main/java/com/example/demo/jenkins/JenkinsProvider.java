@@ -1,5 +1,6 @@
 package com.example.demo.jenkins;
 
+import com.example.demo.jenkins.provider.JenkinsStatus;
 import com.offbytwo.jenkins.model.Job;
 
 import java.util.List;
@@ -12,5 +13,5 @@ public interface JenkinsProvider {
 
     Job getJob(String jobIdentifier);
 
-    boolean isAlive();
+    JenkinsStatus getStatus();
 }
