@@ -1,16 +1,19 @@
-import java.util.concurrent.ExecutionException;
+package com.example.demo;
 
 import im.dlg.botsdk.Bot;
 import im.dlg.botsdk.BotConfig;
+import org.springframework.stereotype.Service;
 
-public class Main {
+import java.util.concurrent.ExecutionException;
 
-    public static void main(String[] args) throws InterruptedException, ExecutionException {
+@Service
+public class MainService {
+    public void main(String[] args) throws InterruptedException, ExecutionException {
 
         BotConfig botConfig = BotConfig.Builder.aBotConfig()
                 .withHost("grpc-test.transmit.im")
                 .withPort(9443)
-                .withToken("e60137c00345e62ea8a21506cfe31b2be10852ec").build();
+                .withToken("sometoken").build();
 
         Bot bot = Bot.start(botConfig).get();
 
