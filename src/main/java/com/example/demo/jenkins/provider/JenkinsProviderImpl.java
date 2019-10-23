@@ -1,5 +1,6 @@
-package com.example.demo.jenkins;
+package com.example.demo.jenkins.provider;
 
+import com.example.demo.jenkins.JenkinsProvider;
 import com.example.demo.jenkins.exceptions.JenkinsException;
 import com.offbytwo.jenkins.JenkinsServer;
 import com.offbytwo.jenkins.model.Job;
@@ -23,6 +24,7 @@ public class JenkinsProviderImpl implements JenkinsProvider {
     @PostConstruct
     private void init() {
         try {
+            //TODO: Скрыть креды?
             jenkinsServer = new JenkinsServer(new URI("http://localhost:8080"), "admin", "passme");
         } catch (URISyntaxException e) {
             e.printStackTrace();
