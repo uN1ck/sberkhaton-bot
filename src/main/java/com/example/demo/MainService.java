@@ -1,22 +1,19 @@
 package com.example.demo;
 
-import com.example.demo.stash.util.HttpRequestType;
-import com.example.demo.stash.util.RestCallConfiguration;
-import com.example.demo.stash.util.RestCallService;
+import com.example.demo.stash.StashService;
+import com.example.demo.stash.util.Pretty;
 import im.dlg.botsdk.Bot;
 import im.dlg.botsdk.BotConfig;
 import lombok.RequiredArgsConstructor;
-import org.asynchttpclient.Response;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 
 @Service
 @RequiredArgsConstructor
 public class MainService {
-    private final RestCallService restCallService;
+    private final StashService stashService;
 
     @PostConstruct
     public void main() throws InterruptedException, ExecutionException {
@@ -29,18 +26,11 @@ public class MainService {
 
         bot.messaging().onMessage(
                 message -> {
-                    RestCallConfiguration configuration = RestCallConfiguration.builder()
-                            .username("kirekov")
-                            .password("1234")
-                            .requestType(HttpRequestType.GET)
-                            .path("/rest/api/1.0/projects")
-                            .build();
-                    Future<Response> response = restCallService.call(configuration);
-                    String result = null;
+                    String result;
                     try {
-                        result = response.get().getResponseBody();
+                        result = Pretty.toString(stashService.listRepositories("kirekov", "1234", "TEST-PROJECT"));
                     } catch (Exception e) {
-                        result = "Ошибка. Все плохо";
+                        result = e.getMessage();
                     }
                     bot.messaging().sendText(message.getPeer(), result);
                 }
