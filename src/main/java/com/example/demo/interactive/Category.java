@@ -15,7 +15,7 @@ public interface Category {
     
     List<Action> getMainMenuCommands();
     
-    List<Entity> listEntities(String pattern);
+    List<Entity> listEntities(String pattern, String[] previous);
     
     List<Action> getEntityCommands();
     
