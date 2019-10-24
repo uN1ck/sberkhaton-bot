@@ -50,6 +50,9 @@ public class StashHandler {
                                     String.format("%s %s %s %s", LIST_COMMAND, PR_COMMAND, PROJECT_KEY_PLACEHOLDER, REPO_NAME_PLACEHOLDER)
                             ),
                             formatCommand(
+                                    String.format("%s %s %s %s", GET_COMMAND, REPO_COMMAND, PROJECT_KEY_PLACEHOLDER, REPO_NAME_PLACEHOLDER)
+                            ),
+                            formatCommand(
                                     String.format("%s %s %s %s %s", GET_COMMAND, PR_COMMAND, PROJECT_KEY_PLACEHOLDER, REPO_NAME_PLACEHOLDER, PR_KEY_PLACEHOLDER)
                             ),
                             formatCommand(
@@ -101,6 +104,10 @@ public class StashHandler {
             String repoName = command[4];
             String prId = command[5];
             return stashService.getPullRequest(stashProjectKey, repoName, prId).toString();
+        } else if (command.length == 5 && command[2].equals(REPO_COMMAND)) {
+            String stashProjectKey = command[3];
+            String repoName = command[4];
+            return stashService.getRepository(stashProjectKey, repoName).get().toString();
         }
         return null;
     }

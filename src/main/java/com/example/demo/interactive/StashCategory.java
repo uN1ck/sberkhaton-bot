@@ -50,6 +50,11 @@ public class StashCategory implements Category {
         if (previous.length == 0) {
             List<StashProject> stashProjects = stashService.listAllProjects();
             return stashProjects.stream()
+                    .filter(project -> {
+                        if (pattern.isEmpty())
+                            return true;
+                        return project.getName().contains(pattern);
+                    })
                     .map(project -> new Entity(project.getKey(), project.getName(), true))
                     .collect(Collectors.toList());
         } else if (previous.length == 1) {
@@ -65,6 +70,7 @@ public class StashCategory implements Category {
     @Override
     public List<Action> getEntityCommands() {
         return Arrays.asList(
+                new Action("/stash get repo %s", "Статус"),
                 new Action("//stash list pr %s", "Список PR"),
                 new Action("/stash sub repo %s", "Подписаться"),
                 new Action("/stash unsub repo %s", "Отписаться")
@@ -87,12 +93,14 @@ public class StashCategory implements Category {
                 .collect(Collectors.toList());
         peerHandler.requestSelect("Список PR", entities, prId -> {
             PullRequest pullRequest = stashService.getPullRequest(stashProjectKey, repoName, prId);
+            final String STATUS_PR = "statusPr";
             final String MERGE_PR = "mergePr";
             final String DELETE_PR = "deletePr";
             final String SUBSCRIBE_PR = "subscribePr";
             final String UNSUBSCRIBE_PR = "unsubscribePr";
 
             List<Entity> prEntities = Arrays.asList(
+                    new Entity(STATUS_PR, "Статус"),
                     new Entity(MERGE_PR, "Влить PR"),
                     new Entity(DELETE_PR, "Удалить PR"),
                     new Entity(SUBSCRIBE_PR, "Подписаться"),
@@ -105,7 +113,11 @@ public class StashCategory implements Category {
                         repoName,
                         pullRequest.getId().toString()
                 );
-                if (x.equals(MERGE_PR)) {
+                if (x.equals(STATUS_PR)) {
+                    peerHandler.sendMessage(
+                            stashService.getPullRequest(stashProjectKey, repoName, prId).toString()
+                    );
+                } else if (x.equals(MERGE_PR)) {
                     rootSubscriptionService.unsubscribe(subscriptionKey);
                     peerHandler.sendMessage(stashService.mergePullRequest(
                             stashProjectKey,
