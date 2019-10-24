@@ -1,7 +1,7 @@
 package com.example.demo.jenkins.subscriptions.service;
 
 import com.example.demo.BotProvider;
-import com.example.demo.jenkins.JenkinsProvider;
+import com.example.demo.jenkins.provider.JenkinsProviderImpl;
 import com.example.demo.jenkins.subscriptions.Subscription;
 import im.dlg.botsdk.domain.Peer;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +15,7 @@ import java.util.Map;
 public class SubscriptionServiceImpl implements SubscriptionService {
     private final Map<Integer, PersonalSubscriptionService> subscriptions;
     private final BotProvider botProvider;
-    private final JenkinsProvider jenkinsProvider;
+    private final JenkinsProviderImpl jenkinsProvider;
 
     //TODO: Изменяемо ли значение?
     @Scheduled(fixedRate = 5000)

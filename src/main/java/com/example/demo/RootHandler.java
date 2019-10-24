@@ -51,7 +51,8 @@ public class RootHandler implements MessageListener {
         
         botProvider.getBot().messaging().sendText(
                 peer,
-                Optional.ofNullable(response).orElse("Нет такой команды :) " + message)
+                Optional.ofNullable(response)
+                        .orElse("Нет такой команды :) " + message)
         );
     }
     
