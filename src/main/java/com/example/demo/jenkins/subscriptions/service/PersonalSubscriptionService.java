@@ -1,4 +1,6 @@
-package com.example.demo.jenkins.subscriptions;
+package com.example.demo.jenkins.subscriptions.service;
+
+import com.example.demo.jenkins.subscriptions.Subscription;
 
 import java.util.List;
 
@@ -7,7 +9,7 @@ public interface PersonalSubscriptionService {
 
     void subscribe(Subscription subscription);
 
-    void unsubscribe(Subscription subscription);
+    void unsubscribe(String identifier);
 
     List<Subscription> getSubscriptions();
 }

@@ -3,13 +3,14 @@ package com.example.demo;
 import im.dlg.botsdk.Bot;
 import im.dlg.botsdk.BotConfig;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.util.concurrent.ExecutionException;
 
-@Service
+@Slf4j
 @Getter
+@Service
 public class BotProvider {
     private Bot bot;
 
@@ -20,8 +21,10 @@ public class BotProvider {
                                                .withPort(443)
                                                .withToken("d33eadd7fa9460116631493b5076c2965d614443").build();
 
-        bot = Bot.start(botConfig).get();
-
+            bot = Bot.start(botConfig).get();
+        } catch (Exception e) {
+            log.error("Ошика при создании бота", e);
+        }
     }
 
 }
