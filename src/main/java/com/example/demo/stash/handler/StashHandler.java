@@ -48,6 +48,9 @@ public class StashHandler {
                             ),
                             formatCommand(
                                     String.format("%s %s %s %s %s %s", MERGE_COMMAND, PR_COMMAND, PROJECT_KEY_PLACEHOLDER, REPO_NAME_PLACEHOLDER, PR_KEY_PLACEHOLDER, PR_VERSION_PLACEHOLDER)
+                            ),
+                            formatCommand(
+                                    String.format("%s %s %s %s %s", DELETE_COMMAND, PR_COMMAND, PROJECT_KEY_PLACEHOLDER, REPO_NAME_PLACEHOLDER, PR_KEY_PLACEHOLDER)
                             )
                     )
             );
@@ -60,6 +63,8 @@ public class StashHandler {
             return getCommand(tail);
         else if (tail.matches(String.format("^%s.*", MERGE_COMMAND)))
             return mergeCommand(tail);
+        else if (tail.matches(String.format("^%s.*", DELETE_COMMAND)))
+            return deleteCommand(tail);
         return null;
     }
 
@@ -113,11 +118,27 @@ public class StashHandler {
         return null;
     }
 
+    private String deleteCommand(String tail) throws Exception {
+        String listTail = tail.replace(DELETE_COMMAND, "").trim();
+        if (listTail.matches(String.format("^%s.*$", PR_COMMAND))) {
+            String[] keys = listTail.replace(PR_COMMAND, "").trim().split("\\s+");
+            if (keys.length != 4) {
+                throw new StashCommandException(
+                        String.format("Необходимо передать 4 аргумента: %s %s %s %s",
+                                PROJECT_KEY_PLACEHOLDER, REPO_NAME_PLACEHOLDER, PR_KEY_PLACEHOLDER, PR_VERSION_PLACEHOLDER)
+                );
+            }
+            return stashService.deletePullRequest(keys[0], keys[1], keys[2], keys[3]);
+        }
+        return null;
+    }
+
     public static class Commands {
         public static final String ROOT_COMMAND = "/stash";
         static final String LIST_COMMAND = "list";
         static final String GET_COMMAND = "get";
         static final String MERGE_COMMAND = "merge";
+        static final String DELETE_COMMAND = "delete";
 
         static final String PROJECT_COMMAND = "project";
         static final String REPO_COMMAND = "repo";

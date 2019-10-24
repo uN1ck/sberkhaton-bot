@@ -2,7 +2,6 @@ package com.example.demo.stash.util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectReader;
 
 import java.util.Map;
 
@@ -14,6 +13,14 @@ public class Json {
             return (Map<K, V>) MAPPER.readValue(json, Map.class);
         } catch (JsonProcessingException e) {
             return null;
+        }
+    }
+
+    public static String serialize(Map map) {
+        try {
+            return MAPPER.writeValueAsString(map);
+        } catch (JsonProcessingException e) {
+            return "{}";
         }
     }
 }

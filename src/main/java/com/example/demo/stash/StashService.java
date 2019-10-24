@@ -8,15 +8,22 @@ import com.example.demo.stash.exceptions.StashConnectionException;
 import com.example.demo.stash.exceptions.StashResponseParsingException;
 import com.example.demo.stash.parse.ResponseParsingService;
 import com.example.demo.stash.util.HttpRequestType;
+import com.example.demo.stash.util.Json;
 import com.example.demo.stash.util.RestCallConfiguration;
 import com.example.demo.stash.util.RestCallService;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.asynchttpclient.Response;
+import org.asynchttpclient.request.body.multipart.StringPart;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
+
+import static com.offbytwo.jenkins.helper.Range.build;
 
 @Service
 @RequiredArgsConstructor
@@ -32,7 +39,8 @@ public class StashService {
 
     private String execRequest(RestCallConfiguration configuration) throws StashConnectionException {
         try {
-            return restCallService.call(configuration).get().getResponseBody();
+            Response response = restCallService.call(configuration).get();
+            return response.getResponseBody();
         } catch (InterruptedException e) {
             String err = "Запрос был прерван";
             log.error(err, e);
@@ -112,5 +120,24 @@ public class StashService {
                 .build();
         String json = execRequest(configuration);
         return responseParsingService.mergePullRequest(json);
+    }
+
+    public String deletePullRequest(String stashProjectKey, String repoName, String prId, String prVersion) throws StashConnectionException {
+        Map<String, Integer> mappedBody = new HashMap<>();
+        mappedBody.put("version", Integer.parseInt(prVersion));
+
+        RestCallConfiguration configuration = RestCallConfiguration.builder()
+                .username(USERNAME)
+                .password(PASSWORD)
+                .requestType(HttpRequestType.DELETE)
+                .path(BASE_PATH + String.format("/projects/%s/repos/%s/pull-requests/%s",
+                        stashProjectKey,
+                        repoName,
+                        prId)
+                )
+                .body(Json.serialize(mappedBody))
+                .build();
+        String json = execRequest(configuration);
+        return responseParsingService.deletePullRequest(json);
     }
 }

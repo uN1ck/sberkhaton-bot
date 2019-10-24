@@ -127,12 +127,25 @@ public class ResponseParsingService {
     public String mergePullRequest(String jsonResponse) {
         Objects.requireNonNull(jsonResponse);
         Map<String, Object> map = Json.deserializeToMap(jsonResponse);
-        if (map.get("errors") != null) {
+        if (map != null && map.get("errors") != null) {
             List<Map<String, Object>> errors = (List<Map<String, Object>>) map.get("errors");
             return "Ошибка при вливании PR: " + errors.stream()
                     .map(m -> (String) m.get("message"))
                     .collect(Collectors.joining("; "));
         }
         return "PR был успешно влит";
+    }
+
+    @NonNull
+    public String deletePullRequest(String jsonResponse) {
+        Objects.requireNonNull(jsonResponse);
+        Map<String, Object> map = Json.deserializeToMap(jsonResponse);
+        if (map != null && map.get("errors") != null) {
+            List<Map<String, Object>> errors = (List<Map<String, Object>>) map.get("errors");
+            return "Ошибка при удалении PR: " + errors.stream()
+                    .map(m -> (String) m.get("message"))
+                    .collect(Collectors.joining("; "));
+        }
+        return "PR был успешно удален";
     }
 }
