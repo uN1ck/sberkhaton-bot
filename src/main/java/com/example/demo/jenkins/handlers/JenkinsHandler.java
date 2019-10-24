@@ -1,7 +1,6 @@
 package com.example.demo.jenkins.handlers;
 
 import com.example.demo.stash.util.Pretty;
-import im.dlg.botsdk.domain.Message;
 import im.dlg.botsdk.domain.Peer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,10 +25,8 @@ public class JenkinsHandler {
     private final ListHandler listHandler;
     private final StatusHandler statusHandler;
 
-    public String onMessage(Message message) {
-        String text = message.getText().trim();
-        Peer sender = message.getSender();
-        if (text.matches("^" + JOBS + "$")) {
+    public String onMessage(Peer sender, String message) {
+        if (message.matches("^" + JOBS + "$")) {
             return Pretty.toString(Arrays.asList("list <filter criteria>",
                                                  "job <name> status",
                                                  "job <name> sub/unsub",
@@ -37,7 +34,7 @@ public class JenkinsHandler {
                                                  "job <name> fav/unfav",
                                                  "job <name> start <args>"));
         } else {
-            String tail = message.getText().replace(JOBS, "").trim();
+            String tail = message.replace(JOBS, "").trim();
             if (tail.matches("^" + STATUS + "$")) {
                 return statusHandler.handle("", sender);
             } else if (tail.matches("^" + LIST + ".*$")) {
@@ -46,7 +43,7 @@ public class JenkinsHandler {
                 return handlerJob.handle(tail.replace(JOB, "").trim(), sender);
             }
         }
-        return "Нет такой комманды [" + text + "] =_=";
+        return "Нет такой комманды [" + message + "] =_=";
     }
 
 
