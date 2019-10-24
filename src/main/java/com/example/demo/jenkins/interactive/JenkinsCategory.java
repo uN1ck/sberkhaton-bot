@@ -4,9 +4,9 @@ import com.example.demo.interactive.Category;
 import com.example.demo.interactive.PeerHandler;
 import com.example.demo.interactive.model.Action;
 import com.example.demo.interactive.model.Entity;
+import com.example.demo.jenkins.JenkinsProvider;
 import com.example.demo.jenkins.dto.JobDto;
 import com.example.demo.jenkins.handlers.JenkinsHandler;
-import com.example.demo.jenkins.provider.JenkinsProviderImpl;
 import com.google.common.collect.ImmutableList;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class JenkinsCategory implements Category {
-    private final JenkinsProviderImpl jenkinsProvider;
+    private final JenkinsProvider jenkinsProvider;
     private final JenkinsHandler jenkinsHandler;
 
     @Override

@@ -1,7 +1,7 @@
 package com.example.demo.jenkins.subscriptions.service;
 
 import com.example.demo.BotProvider;
-import com.example.demo.jenkins.provider.JenkinsProviderImpl;
+import com.example.demo.jenkins.JenkinsProvider;
 import com.example.demo.jenkins.subscriptions.Subscription;
 import im.dlg.botsdk.domain.Peer;
 import lombok.RequiredArgsConstructor;
@@ -15,12 +15,12 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class SubscriptionServiceImpl implements SubscriptionService {
+    private static final int REFRESH_RATE = 5000;
     private final Map<Integer, PersonalSubscriptionService> subscriptions;
     private final BotProvider botProvider;
-    private final JenkinsProviderImpl jenkinsProvider;
+    private final JenkinsProvider jenkinsProvider;
 
-    //TODO: Изменяемо ли значение?
-    @Scheduled(fixedRate = 5000)
+    @Scheduled(fixedRate = REFRESH_RATE)
     public void refreshSubscriptions() {
         try {
             subscriptions.values().forEach(PersonalSubscriptionService::refreshSubscriptions);

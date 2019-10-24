@@ -41,6 +41,7 @@ public class JenkinsProviderImpl implements JenkinsProvider {
     }
 
 
+    @Override
     public List<JobDto> getJobsOnLevel(String jobIdentifier, String filter) {
         try {
             Optional<FolderJob> folderJob = jenkinsServer.getFolderJob(jenkinsServer.getJob(jobIdentifier));
@@ -64,6 +65,7 @@ public class JenkinsProviderImpl implements JenkinsProvider {
     }
 
 
+    @Override
     public List<JobDto> getJobsOnLevel(String filter) {
         try {
             return jenkinsServer.getJobs()
@@ -94,6 +96,7 @@ public class JenkinsProviderImpl implements JenkinsProvider {
     }
 
 
+    @Override
     public Job getJob(String jobIdentifier) {
         try {
             return jenkinsServer.getJob(jobIdentifier);
@@ -103,6 +106,7 @@ public class JenkinsProviderImpl implements JenkinsProvider {
     }
 
 
+    @Override
     public JenkinsStatusDto getStatus() {
         return jenkinsServer.isRunning() ?
                 new JenkinsStatusDto(JenkinsStatusDto.Status.OK, jenkinsServer.getVersion().getLiteralVersion()) :

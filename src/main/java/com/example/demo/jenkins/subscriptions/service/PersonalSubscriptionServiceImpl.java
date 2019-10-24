@@ -1,7 +1,7 @@
 package com.example.demo.jenkins.subscriptions.service;
 
 import com.example.demo.BotProvider;
-import com.example.demo.jenkins.provider.JenkinsProviderImpl;
+import com.example.demo.jenkins.JenkinsProvider;
 import com.example.demo.jenkins.subscriptions.Subscription;
 import com.offbytwo.jenkins.model.Job;
 import im.dlg.botsdk.domain.Peer;
@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 public class PersonalSubscriptionServiceImpl implements PersonalSubscriptionService {
     private final Peer owner;
     private final BotProvider botProvider;
-    private final JenkinsProviderImpl jenkinsProvider;
+    private final JenkinsProvider jenkinsProvider;
     @Getter
     private List<Subscription> subscriptions = new ArrayList<>();
 

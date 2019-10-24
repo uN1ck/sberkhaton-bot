@@ -2,9 +2,11 @@ package com.example.demo.jenkins.handlers;
 
 import com.example.demo.BotProvider;
 import com.example.demo.interactive.PeerHandler;
-import com.example.demo.jenkins.provider.JenkinsProviderImpl;
+import com.example.demo.interactive.model.Entity;
+import com.example.demo.jenkins.JenkinsProvider;
 import com.example.demo.jenkins.subscriptions.CommonEventSubscription;
 import com.example.demo.jenkins.subscriptions.service.SubscriptionService;
+import com.google.common.collect.ImmutableList;
 import com.offbytwo.jenkins.model.Build;
 import com.offbytwo.jenkins.model.BuildWithDetails;
 import com.offbytwo.jenkins.model.JobWithDetails;
@@ -20,12 +22,13 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class JobHandler {
-    private final JenkinsProviderImpl jenkinsProvider;
+    private final JenkinsProvider jenkinsProvider;
     private final SubscriptionService subscriptionService;
     private final BotProvider botProvider;
 
@@ -39,18 +42,19 @@ public class JobHandler {
             String regex = ".*" + operator + "$";
             if (tail.matches(regex)) {
                 String newTail = tail.replace(operator, "").trim();
+
                 if (operator.equals(CommandList.STATUS)) {
                     return statusHandler(newTail);
                 } else if (operator.equals(CommandList.UNSUB)) {
-                    return subscribeHandler(newTail, false, peerHandler.getPeer());
+                    return unsubscribeHandler(newTail, peerHandler.getPeer());
                 } else if (operator.equals(CommandList.SUB)) {
-                    return subscribeHandler(newTail, true, peerHandler.getPeer());
+                    return subscribeHandler(newTail, peerHandler.getPeer());
                 } else if (operator.equals(CommandList.START_LAST)) {
                     return startLastHandler(newTail, peerHandler.getPeer());
                 } else if (operator.equals(CommandList.LOG)) {
                     return logHandler(newTail, peerHandler.getPeer());
                 } else if (operator.equals(CommandList.START)) {
-                    //  return startLastHandler(newTail, peerHandler.getPeer());
+                    return startHandler(newTail, peerHandler);
                 }
             }
         }
@@ -85,25 +89,32 @@ public class JobHandler {
                                  lastSuccessfulBuildString,
                                  lastFailedBuildString);
         } catch (Exception e) {
-            log.error("Не удалось получить состояние джобы", e);
-            return "Неизвестно, проверьте статус Jenkins :(";
-
+            String errorString = String.format("Состояние для `%s` неизвестно, проверьте статус Jenkins :(", jobName);
+            log.error(errorString, e);
+            return errorString;
         }
     }
 
-    private String subscribeHandler(String jobName, boolean subscribe, Peer sender) {
+    private String subscribeHandler(String jobName, Peer sender) {
         try {
-            if (subscribe) {
-                JobWithDetails job = jenkinsProvider.getJob(jobName).details();
-                subscriptionService.subscribe(sender, new CommonEventSubscription(job));
-                return String.format("Подписка на `%s` оформлена", jobName);
-            } else {
-                subscriptionService.unsubscribe(sender, jobName);
-                return String.format("Подписка на `%s` прекращена", jobName);
-            }
+            JobWithDetails job = jenkinsProvider.getJob(jobName).details();
+            subscriptionService.subscribe(sender, new CommonEventSubscription(job));
+            return String.format("Подписка на `%s` оформлена", jobName);
         } catch (Exception e) {
-            log.error("Ошибка при запуске задачи", e);
-            return "Не удалось изменить состояние подписки :(";
+            String errorString = String.format("Не удалось изменить состояние подписки для `%s` :(", jobName);
+            log.error(errorString, e);
+            return errorString;
+        }
+    }
+
+    private String unsubscribeHandler(String jobName, Peer sender) {
+        try {
+            subscriptionService.unsubscribe(sender, jobName);
+            return String.format("Подписка на `%s` прекращена", jobName);
+        } catch (Exception e) {
+            String errorString = String.format("Не удалось изменить состояние подписки для `%s` :(", jobName);
+            log.error(errorString, e);
+            return errorString;
         }
     }
 
@@ -114,13 +125,14 @@ public class JobHandler {
             if (b.equals(Build.BUILD_HAS_NEVER_RUN)) {
                 return String.format("Задача `%s` никогда не запускалась и не может быть перезапущена", jobName);
             } else {
-                subscribeHandler(jobName, true, sender);
+                subscribeHandler(jobName, sender);
                 QueueReference q = jobWithDetails.build(jobWithDetails.getLastBuild().details().getParameters(), true);
                 return String.format("Задача `%s` запущена успешно", jobName);
             }
         } catch (Exception e) {
-            log.error("Ошибка при запуске задачи " + jobName, e);
-            return "Не удалось запустить :(";
+            String errorString = String.format("Не удалось перезапустить задачу `%s`с параметрами последнего запуска :(", jobName);
+            log.error(errorString, e);
+            return errorString;
         }
     }
 
@@ -134,10 +146,32 @@ public class JobHandler {
             botProvider.getBot().messaging().sendFile(sender, f);
             return "Выгрузка лога скоро начнется";
         } catch (Exception e) {
-            log.error("Не удалось получить лог для job " + jobName, e);
-            return "Не удалось выгрузить файл лога послденего билда " + jobName;
+            String errorString = String.format("Не удалось получить лог для последнего билда задачи `%s` :(", jobName);
+            log.error(errorString, e);
+            return errorString;
         }
 
+    }
+
+    private String startHandler(String jobName, PeerHandler peerHandler) {
+        try {
+            //TODO: хз как запускать job
+            jenkinsProvider.getJob(jobName).details();
+            List<Entity> entities = ImmutableList.of(
+                    new Entity("2", "-2-"),
+                    new Entity("3", "-3-"),
+                    new Entity("4", "-4-")
+            );
+
+            peerHandler.requestSelect("Сделай свой выбор",
+                                      entities,
+                                      identifier -> peerHandler.sendMessage("You selected " + identifier));
+
+            return PeerHandler.DELAYED_COMMAND;
+        } catch (Exception e) {
+            log.error("Не удалось запустить job " + jobName, e);
+            return "Не удалось запустить job " + jobName;
+        }
     }
 
 }

@@ -1,13 +1,15 @@
 package com.example.demo.jenkins.subscriptions;
 
 import com.example.demo.BotProvider;
-import com.example.demo.jenkins.dto.CommonEventDto;
 import com.example.demo.jenkins.exceptions.SubscriptionException;
 import com.offbytwo.jenkins.model.BuildWithDetails;
 import com.offbytwo.jenkins.model.Job;
 import com.offbytwo.jenkins.model.JobWithDetails;
 import im.dlg.botsdk.domain.Peer;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Arrays;
+import java.util.Map;
 
 @Slf4j
 public class CommonEventSubscription extends Subscription {
@@ -23,17 +25,16 @@ public class CommonEventSubscription extends Subscription {
         try {
             JobWithDetails jobWithDetails = job.details();
             BuildWithDetails buildWithDetails = jobWithDetails.getLastBuild().details();
-            int newLastBuild = jobWithDetails.getLastBuild().getNumber();
-            if (lastBuildId != jobWithDetails.getLastBuild().getNumber()) {
+            int newLastBuild = buildWithDetails.getNumber();
+
+
+            if (lastBuildId != buildWithDetails.getNumber()) {
                 lastBuildId = newLastBuild;
-                CommonEventDto commonEventDto = CommonEventDto.builder()
-                                                              .buildResult(buildWithDetails.getResult().name())
-                                                              .buildNumber(buildWithDetails.getNumber())
-                                                              .jobFullName(jobFullName(jobWithDetails))
-                                                              .build();
+                String response = formatMessage(jobWithDetails, buildWithDetails);
+
                 botProvider.getBot()
                            .messaging()
-                           .sendText(owner, commonEventDto.toString());
+                           .sendText(owner, response);
 
             }
 
@@ -41,6 +42,17 @@ public class CommonEventSubscription extends Subscription {
             log.error("Ошибка при попытке получить информацию по подписанной job");
             throw new SubscriptionException("Ошибка при попытке обработать подписку", e);
         }
+    }
+
+    private String formatMessage(JobWithDetails jobWithDetails, BuildWithDetails buildWithDetails) {
+        String fullName = jobFullName(jobWithDetails);
+        String buildResult = buildWithDetails.getResult().name();
+        int buildNumber = buildWithDetails.getNumber();
+        Map<String, String> params = buildWithDetails.getParameters();
+        String result = String.format("Job `%s` (%d)\nСтатус: %s\nПараметры: %s", fullName, buildNumber, buildResult,
+                                      Arrays.toString(params.entrySet().toArray()));
+        return result;
+
     }
 
     private String jobFullName(JobWithDetails jobWithDetails) {
