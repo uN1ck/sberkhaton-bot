@@ -8,7 +8,9 @@ import com.google.common.base.Joiner;
 import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -17,20 +19,27 @@ public class CategoryInteractiveHandler {
     private final PeerHandler peerHandler;
     private final Category category;
     
+    private final Map<String, List<String>> favourites = new HashMap<>();
+    
     public void handle(ButtonAction action) {
         if(action instanceof StartAction) {
             start((StartAction)action);
         } else if(action instanceof InvokeAction) {
             invoke((InvokeAction)action);
         } else if(action instanceof CategoryAction) {
-            // Основное меню или избранное
-            renderMenu((CategoryAction) action);
+            renderCategory((CategoryAction) action);
+        } else if(action instanceof MenuAction) {
+            renderMenu((MenuAction) action);
         } else if(action instanceof FilterRequestAction) {
             requestFilter((FilterRequestAction)action);
         } else if(action instanceof ListAction) {
             renderEntities((ListAction)action);
         } else if(action instanceof EntityAction) {
             renderEntityActions((EntityAction)action);
+        } else if(action instanceof FavouriteAction) {
+            FavouriteAction fav = (FavouriteAction) action;
+            favourite(fav.getPrevious());
+            renderEntityActions(fav.getPrevious());
         }
     }
     
@@ -52,7 +61,27 @@ public class CategoryInteractiveHandler {
         this.peerHandler.onMessage(parent.getCommand());
     }
     
-    private void renderMenu(CategoryAction parent) {
+    private void renderCategory(CategoryAction parent) {
+        MenuAction menu = new MenuAction(parent.getPrevious(), category.getCommand());
+        
+        if(favourites.size() == 0) {
+            renderMenu(menu);
+        } else {
+            List<Button> buttons = new ArrayList<>();
+            
+            for(Map.Entry<String, List<String>> e : favourites.entrySet()) {
+                buttons.add(new Button(
+                        new EntityAction(parent, category.getCommand(), e.getKey(), e.getValue()),
+                        e.getValue().get(e.getValue().size() - 1)
+                ));
+            }
+            
+            buttons.add(new Button(menu, "..."));
+            this.peerHandler.renderButtons(parent, category.getCommandName(), buttons);
+        }
+    }
+    
+    private void renderMenu(MenuAction parent) {
         List<Button> buttons = new ArrayList<>();
         
         buttons.add(new Button(
@@ -108,20 +137,24 @@ public class CategoryInteractiveHandler {
     }
     
     private void renderEntityActions(EntityAction parent) {
-        this.peerHandler.renderButtons(
-                parent,
-                path(parent.getDisplayPath()),
-                category.getEntityCommands()
-                        .stream()
-                        .map(action -> new Button(
-                                new InvokeAction(
-                                        category.getCommand(), 
-                                        String.format(action.getCommand(), parent.getIdentifier())
-                                ),
-                                action.getDisplayName() 
-                        ))
-                        .collect(Collectors.toList())
-        );
+        List<Button> buttons = category.getEntityCommands()
+                                       .stream()
+                                       .map(action -> new Button(
+                                               new InvokeAction(
+                                                       category.getCommand(),
+                                                       String.format(action.getCommand(), parent.getIdentifier())
+                                               ),
+                                               action.getDisplayName()
+                                       ))
+                                       .collect(Collectors.toList());
+        
+        buttons = new ArrayList<>(buttons);
+        buttons.add(new Button(
+                new FavouriteAction(parent),
+                favourites.containsKey(parent.getIdentifier()) ? "❌" : "\uD83C\uDF1F"
+        ));
+        
+        this.peerHandler.renderButtons(parent, path(parent.getDisplayPath()), buttons);
     }
     
     private String path(List<String> path) {
@@ -129,6 +162,15 @@ public class CategoryInteractiveHandler {
         list.add(category.getCommandName());
         list.addAll(path);
         return Joiner.on(" → ").join(list);
+    }
+    
+    private void favourite(EntityAction action) {
+        String key = action.getIdentifier();
+        if(favourites.containsKey(key)) {
+            favourites.remove(key);
+        } else {
+            favourites.put(key, action.getDisplayPath());
+        }
     }
     
 }

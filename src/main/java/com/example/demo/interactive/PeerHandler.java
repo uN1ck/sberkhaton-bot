@@ -83,8 +83,9 @@ public class PeerHandler implements MessageListener, InteractiveEventListener {
     public void onEvent(InteractiveEvent event) {
         if(event.getId().startsWith("request_")) {
             if(activeSelectHandler != null && event.getMid().equals(activeSelectUuid)) {
-                activeSelectHandler.accept(event.getValue());
-                resetSelectHandler();
+                PeerInputHandler local = activeSelectHandler;
+                activeSelectHandler = null;
+                local.accept(event.getValue());
             }
             return;
         }
@@ -161,14 +162,13 @@ public class PeerHandler implements MessageListener, InteractiveEventListener {
     @SneakyThrows
     public void requestSelect(String message, List<Entity> entities, PeerInputHandler handler) {
         activeSelectHandler = handler;
-        String activeSelectIdentifier = "request_" + UUID.randomUUID(); // TODO: remove
         
         List<InteractiveAction> actions = new ArrayList<>();
         int counter = 0;
         
         for(Entity button : entities) {
             actions.add(new InteractiveAction(
-                    activeSelectIdentifier + counter,
+                    "request_" + counter,
                     new InteractiveButton(button.getIdentifier(), button.getDisplayName())
             ));
             counter++;
