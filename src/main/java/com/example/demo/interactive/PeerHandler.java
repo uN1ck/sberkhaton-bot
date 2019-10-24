@@ -63,6 +63,9 @@ public class PeerHandler implements MessageListener, InteractiveEventListener {
         } else if (message.matches("^/stash.*")) {
             response = rootHandler.getStashHandler().onMessage(peer, message);
         }
+        else if (message.matches("^//stash.*")) {
+            response = rootHandler.getStashCategory().onMessage(this, message);
+        }
 
         if(response == null || !response.equals(DELAYED_COMMAND)) {
             rootHandler.getBotProvider().getBot().messaging().sendText(
@@ -84,8 +87,9 @@ public class PeerHandler implements MessageListener, InteractiveEventListener {
     public void onEvent(InteractiveEvent event) {
         if(event.getId().startsWith("request_")) {
             if(activeSelectHandler != null && event.getId().startsWith(activeSelectIdentifier)) {
-                activeSelectHandler.accept(event.getValue());
+                PeerInputHandler local = activeSelectHandler;
                 activeSelectHandler = null;
+                local.accept(event.getValue());
             }
             return;
         }
