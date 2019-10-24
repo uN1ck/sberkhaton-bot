@@ -45,6 +45,9 @@ public class StashHandler {
                             ),
                             formatCommand(
                                     String.format("%s %s %s %s %s", GET_COMMAND, PR_COMMAND, PROJECT_KEY_PLACEHOLDER, REPO_NAME_PLACEHOLDER, PR_KEY_PLACEHOLDER)
+                            ),
+                            formatCommand(
+                                    String.format("%s %s %s %s %s %s", MERGE_COMMAND, PR_COMMAND, PROJECT_KEY_PLACEHOLDER, REPO_NAME_PLACEHOLDER, PR_KEY_PLACEHOLDER, PR_VERSION_PLACEHOLDER)
                             )
                     )
             );
@@ -55,6 +58,8 @@ public class StashHandler {
             return listCommand(tail);
         } else if (tail.matches(String.format("^%s.*", GET_COMMAND)))
             return getCommand(tail);
+        else if (tail.matches(String.format("^%s.*", MERGE_COMMAND)))
+            return mergeCommand(tail);
         return null;
     }
 
@@ -93,10 +98,27 @@ public class StashHandler {
         return null;
     }
 
+    private String mergeCommand(String tail) throws Exception {
+        String listTail = tail.replace(MERGE_COMMAND, "").trim();
+        if (listTail.matches(String.format("^%s.*$", PR_COMMAND))) {
+            String[] keys = listTail.replace(PR_COMMAND, "").trim().split("\\s+");
+            if (keys.length != 4) {
+                throw new StashCommandException(
+                        String.format("Необходимо передать 4 аргумента: %s, %s, %s, %s",
+                                PROJECT_KEY_PLACEHOLDER, REPO_NAME_PLACEHOLDER, PR_KEY_PLACEHOLDER, PR_VERSION_PLACEHOLDER)
+                );
+            }
+            return stashService.mergePullRequest(keys[0], keys[1], keys[2], keys[3]);
+        }
+        return null;
+    }
+
     public static class Commands {
         public static final String ROOT_COMMAND = "/stash";
         static final String LIST_COMMAND = "list";
         static final String GET_COMMAND = "get";
+        static final String MERGE_COMMAND = "merge";
+
         static final String PROJECT_COMMAND = "project";
         static final String REPO_COMMAND = "repo";
         static final String PR_COMMAND = "pr";
@@ -106,5 +128,6 @@ public class StashHandler {
         static final String PROJECT_KEY_PLACEHOLDER = "<Ключ проекта>";
         static final String REPO_NAME_PLACEHOLDER = "<Название репозитория>";
         static final String PR_KEY_PLACEHOLDER = "<Ключ PR>";
+        static final String PR_VERSION_PLACEHOLDER = "<Версия PR>";
     }
 }

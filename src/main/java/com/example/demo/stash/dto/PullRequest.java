@@ -17,12 +17,13 @@ public class PullRequest {
     private final LocalDateTime updatedDate;
     private final String fromBranch;
     private final String toBranch;
+    private final Integer version;
 
     @Override
     public String toString() {
-        return String.format("{ Ключ PR = %s; Заголовок = %s; Автор = %s; Email автора = %s, Дата создания = %s; " +
+        return String.format("{ Ключ PR = %s; Заголовок = %s; Версия PR = %s; Автор = %s; Email автора = %s, Дата создания = %s; " +
                         "Дата изменения = %s; Ветка-источник = %s; Ветка-приемник = %s }",
-                id, title, authorDisplayName, authorEmail,
+                id, title, version, authorDisplayName, authorEmail,
                 Pretty.toString(creationDate), Pretty.toString(updatedDate),
                 fromBranch, toBranch);
     }

@@ -97,4 +97,20 @@ public class StashService {
         String json = execRequest(configuration);
         return responseParsingService.getPullRequest(json);
     }
+
+    public String mergePullRequest(String stashProjectKey, String repoName, String prId, String prVersion) throws StashConnectionException {
+        RestCallConfiguration configuration = RestCallConfiguration.builder()
+                .username(USERNAME)
+                .password(PASSWORD)
+                .requestType(HttpRequestType.POST)
+                .path(BASE_PATH + String.format("/projects/%s/repos/%s/pull-requests/%s/merge?version=%s",
+                        stashProjectKey,
+                        repoName,
+                        prId,
+                        prVersion)
+                )
+                .build();
+        String json = execRequest(configuration);
+        return responseParsingService.mergePullRequest(json);
+    }
 }

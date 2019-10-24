@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -108,6 +107,7 @@ public class ResponseParsingService {
 
 
         return PullRequest.builder()
+                .version((Integer) map.get("version"))
                 .authorDisplayName((String) author.get("displayName"))
                 .authorEmail((String) author.get("emailAddress"))
                 .creationDate(LocalDateTime.ofInstant(Instant.ofEpochMilli(
@@ -121,5 +121,18 @@ public class ResponseParsingService {
                 .fromBranch((String) fromRef.get("displayId"))
                 .toBranch((String) toRef.get("displayId"))
                 .build();
+    }
+
+    @NonNull
+    public String mergePullRequest(String jsonResponse) {
+        Objects.requireNonNull(jsonResponse);
+        Map<String, Object> map = Json.deserializeToMap(jsonResponse);
+        if (map.get("errors") != null) {
+            List<Map<String, Object>> errors = (List<Map<String, Object>>) map.get("errors");
+            return "Ошибка при вливании PR: " + errors.stream()
+                    .map(m -> (String) m.get("message"))
+                    .collect(Collectors.joining("; "));
+        }
+        return "PR был успешно влит";
     }
 }
