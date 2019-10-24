@@ -200,7 +200,7 @@ public class CsmRequestService {
                     String res = "";
                     for (WildFlyGroup group : cluster.getGroups()) {
                         for (WildFlyNode node : group.getNodes()) {
-                            res += String.format("[ WF \"%s:%d\" ] [ из группы: \"%s\" ] [ запущен: \"%b\" ] [ завис: \"%b\" ] [ данные получены за: \"%d\" мс ] [ онлайн: \"%d sec\" ] [ память: \"%d of %d mb\" ]\n",
+                            res += String.format("[ WF \"%s:%d\" ] \n[ из группы: \"%s\" ] \n[ запущен: \"%b\" ]\n [ завис: \"%b\" ]\n [ данные получены за: \"%d\" мс ] \n[ онлайн: \"%d sec\" ] \n[ память: \"%d of %d mb\" ]\n",
                                     node.getDomainName(), node.getPort(), group.getName(), node.isReachable(),
                                     node.isPending(), node.getLastPing(), node.getUptime() / 1000,
                                     node.getHeapUsed() / 1000 / 1000, node.getHeapMax() / 1000 / 1000);
@@ -221,7 +221,7 @@ public class CsmRequestService {
         WildFlyNode node = getWfNodeObject(hostPort);
         String res = "";
         if (node != null) {
-            res += String.format("[ WF \"%s:%d\" ] [ запущен: \"%b\" ] [ завис: \"%b\" ] [ данные получены за: \"%d\" мс ] [ онлайн: \"%d sec\" ] [ память: \"%d of %d mb\" ]\n",
+            res += String.format("[ WF \"%s:%d\" ] \n[ запущен: \"%b\" ]\n [ завис: \"%b\" ]\n [ данные получены за: \"%d\" мс ] \n[ онлайн: \"%d sec\" ]\n [ память: \"%d of %d mb\" ]\n",
                     node.getDomainName(), node.getPort(), node.isReachable(),
                     node.isPending(), node.getLastPing(), node.getUptime() / 1000,
                     node.getHeapUsed() / 1000 / 1000, node.getHeapMax() / 1000 / 1000);
@@ -229,7 +229,7 @@ public class CsmRequestService {
                 int i = 0;
                 for (Module m : node.getModules()) {
                     i++;
-                    res += "\t" + String.format("[%d] [ Имя деплоймента: \"%s\" ] [ имя исполнявмого файла: \"%s\" ] [запущен: \"%s\" ] [ статус: \"%s\" ]\n", i, m.getName(), m.getRuntimeName(), m.getEnabled(), m.getStatus());
+                    res += "\t" + String.format("[%d] [ Имя деплоймента: \"%s\" ] [ имя исполняемого файла: \"%s\" ] [запущен: \"%s\" ] [ статус: \"%s\" ]\n", i, m.getName(), m.getRuntimeName(), m.getEnabled(), m.getStatus());
                 }
             }
             return res;
@@ -246,7 +246,7 @@ public class CsmRequestService {
             int i = 0;
             for (Module m : node.getModules()) {
                 i++;
-                res += String.format("[%d] [ Имя деплоймента: \"%s\" ] [ имя исполнявмого файла: \"%s\" ] [ запущен: \"%s\" ] [ статус: \"%s\" ]\n", i, m.getName(), m.getRuntimeName(), m.getEnabled(), m.getStatus());
+                res += String.format("[%d] [ Имя деплоймента: \"%s\" ] [ имя исполняемого файла: \"%s\" ] [ запущен: \"%s\" ] [ статус: \"%s\" ]\n", i, m.getName(), m.getRuntimeName(), m.getEnabled(), m.getStatus());
             }
             return res;
         } else {
@@ -262,7 +262,7 @@ public class CsmRequestService {
             boolean found = false;
             for (Module m : node.getModules()) {
                 if (m.getName().equals(deploymentName)) {
-                    res += String.format("[ Имя деплоймента: \"%s\" ] [ имя исполнявмого файла: \"%s\" ] [ запущен: \"%s\" ] [ статус: \"%s\" ]\n",  m.getName(), m.getRuntimeName(), m.getEnabled(), m.getStatus());
+                    res += String.format("[ Имя деплоймента: \"%s\" ] [ имя исполняемого файла: \"%s\" ] [ запущен: \"%s\" ] [ статус: \"%s\" ]\n",  m.getName(), m.getRuntimeName(), m.getEnabled(), m.getStatus());
                     found = true;
                     break;
                 }
@@ -305,18 +305,18 @@ public class CsmRequestService {
         String res = "";
         if (node != null) {
             for (Map.Entry<String, String> entry : node.getInputArgs().entrySet()) {
-                if (entry.getValue().equals("{presented}")) {
+                if (!entry.getValue().equals("{presented}")) {
                     res += entry.getKey() + "=" + entry.getValue() + "\n";
                 } else {
                     res += entry.getKey() + "\n";
                 }
             }
             for (Map.Entry<String, String> entry : node.getProcessedProps().entrySet()) {
-                if (entry.getValue().equals("{presented}")) {
+                if (!entry.getValue().equals("{presented}")) {
                     res += entry.getKey() + "=" + entry.getValue() + "\n";
                 } else {
                     res += entry.getKey() + "\n";
-                    ;
+
                 }
             }
         } else res = "Нет такого сервера " + hostPort;
