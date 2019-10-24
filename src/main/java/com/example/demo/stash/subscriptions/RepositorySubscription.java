@@ -6,7 +6,6 @@ import com.example.demo.stash.dto.PullRequestShorten;
 import com.example.demo.stash.dto.StashProject;
 import com.example.demo.stash.dto.StashRepository;
 import im.dlg.botsdk.domain.Peer;
-import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
