@@ -5,7 +5,6 @@ import com.example.demo.stash.dto.PullRequestShorten;
 import com.example.demo.stash.dto.StashProject;
 import com.example.demo.stash.dto.StashRepository;
 import com.example.demo.stash.exceptions.StashConnectionException;
-import com.example.demo.stash.exceptions.StashResponseParsingException;
 import com.example.demo.stash.parse.ResponseParsingService;
 import com.example.demo.stash.util.HttpRequestType;
 import com.example.demo.stash.util.Json;
@@ -15,15 +14,13 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.asynchttpclient.Response;
-import org.asynchttpclient.request.body.multipart.StringPart;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
-
-import static com.offbytwo.jenkins.helper.Range.build;
 
 @Service
 @RequiredArgsConstructor
@@ -53,7 +50,7 @@ public class StashService {
     }
 
     @NonNull
-    public List<StashProject> listAllProjects() throws StashConnectionException, StashResponseParsingException {
+    public List<StashProject> listAllProjects() {
         RestCallConfiguration configuration = RestCallConfiguration.builder()
                 .username(USERNAME)
                 .password(PASSWORD)
@@ -65,7 +62,19 @@ public class StashService {
     }
 
     @NonNull
-    public List<StashRepository> listRepositories(String stashProjectKey) throws StashConnectionException, StashResponseParsingException {
+    public Optional<StashProject> getProject(String stashProjectKey) {
+        RestCallConfiguration configuration = RestCallConfiguration.builder()
+                .username(USERNAME)
+                .password(PASSWORD)
+                .requestType(HttpRequestType.GET)
+                .path(BASE_PATH + "/projects/" + stashProjectKey)
+                .build();
+        String json = execRequest(configuration);
+        return responseParsingService.getProject(json);
+    }
+
+    @NonNull
+    public List<StashRepository> listRepositories(String stashProjectKey) {
         RestCallConfiguration configuration = RestCallConfiguration.builder()
                 .username(USERNAME)
                 .password(PASSWORD)
@@ -77,7 +86,19 @@ public class StashService {
     }
 
     @NonNull
-    public List<PullRequestShorten> listPullRequests(String stashProjectKey, String repoName) throws StashConnectionException, StashResponseParsingException {
+    public Optional<StashRepository> getRepository(String stashProjectKey, String repoName) {
+        RestCallConfiguration configuration = RestCallConfiguration.builder()
+                .username(USERNAME)
+                .password(PASSWORD)
+                .requestType(HttpRequestType.GET)
+                .path(BASE_PATH + String.format("/projects/%s/repos/%s", stashProjectKey, repoName))
+                .build();
+        String json = execRequest(configuration);
+        return responseParsingService.getRepository(json);
+    }
+
+    @NonNull
+    public List<PullRequestShorten> listPullRequests(String stashProjectKey, String repoName) {
         RestCallConfiguration configuration = RestCallConfiguration.builder()
                 .username(USERNAME)
                 .password(PASSWORD)
@@ -91,7 +112,7 @@ public class StashService {
         return responseParsingService.listPullRequests(json);
     }
 
-    public PullRequest getPullRequest(String stashProjectKey, String repoName, String prId) throws StashConnectionException, StashResponseParsingException {
+    public PullRequest getPullRequest(String stashProjectKey, String repoName, String prId) {
         RestCallConfiguration configuration = RestCallConfiguration.builder()
                 .username(USERNAME)
                 .password(PASSWORD)
@@ -106,7 +127,7 @@ public class StashService {
         return responseParsingService.getPullRequest(json);
     }
 
-    public String mergePullRequest(String stashProjectKey, String repoName, String prId, String prVersion) throws StashConnectionException {
+    public String mergePullRequest(String stashProjectKey, String repoName, String prId, String prVersion) {
         RestCallConfiguration configuration = RestCallConfiguration.builder()
                 .username(USERNAME)
                 .password(PASSWORD)
@@ -122,7 +143,7 @@ public class StashService {
         return responseParsingService.mergePullRequest(json);
     }
 
-    public String deletePullRequest(String stashProjectKey, String repoName, String prId, String prVersion) throws StashConnectionException {
+    public String deletePullRequest(String stashProjectKey, String repoName, String prId, String prVersion) {
         Map<String, Integer> mappedBody = new HashMap<>();
         mappedBody.put("version", Integer.parseInt(prVersion));
 

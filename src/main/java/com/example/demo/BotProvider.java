@@ -15,12 +15,12 @@ public class BotProvider {
     private Bot bot;
 
     @PostConstruct
-    private void init() throws InterruptedException, ExecutionException {
-        BotConfig botConfig = BotConfig.Builder.aBotConfig()
-                                               .withHost("hackathon-mob.transmit.im")
-                                               .withPort(443)
-                                               .withToken("d33eadd7fa9460116631493b5076c2965d614443").build();
-
+    private void init() {
+        try {
+            BotConfig botConfig = BotConfig.Builder.aBotConfig()
+                    .withHost("hackathon-mob.transmit.im")
+                    .withPort(443)
+                    .withToken("d33eadd7fa9460116631493b5076c2965d614443").build();
             bot = Bot.start(botConfig).get();
         } catch (Exception e) {
             log.error("Ошика при создании бота", e);

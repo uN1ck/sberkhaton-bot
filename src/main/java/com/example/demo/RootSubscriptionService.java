@@ -26,4 +26,8 @@ public class RootSubscriptionService {
     public void unsubscribe(String key) {
         subscriptions.remove(key);
     }
+
+    public boolean isSubscribed(String key) {
+        return subscriptions.containsKey(key);
+    }
 }

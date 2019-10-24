@@ -15,7 +15,7 @@ public class StashRepository {
     @Override
     public String toString() {
         return String.format("{ Название = %s; Состояние = %s; Можно форкать = %s; Публичный = %s }",
-                name, state.equals("AVAILABLE") ? "Доступен" : "Недоступен",
+                name, state.toLowerCase().equals("available") ? "Доступен" : "Недоступен",
                 Pretty.toString(isForkable), Pretty.toString(isPublic));
     }
 }

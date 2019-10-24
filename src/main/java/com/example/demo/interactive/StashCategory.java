@@ -60,7 +60,8 @@ public class StashCategory implements Category {
     @Override
     public List<Action> getEntityCommands() {
         return Arrays.asList(
-          new Action("/stash ")
+                new Action("/stash sub repo %s", "Подписаться"),
+                new Action("/stash unsub repo %s", "Отписаться")
         );
     }
 }
