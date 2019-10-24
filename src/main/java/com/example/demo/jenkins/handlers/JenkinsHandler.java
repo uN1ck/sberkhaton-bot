@@ -1,13 +1,12 @@
 package com.example.demo.jenkins.handlers;
 
-import com.example.demo.jenkins.JenkinsProvider;
 import com.example.demo.stash.util.Pretty;
 import im.dlg.botsdk.domain.Message;
+import im.dlg.botsdk.domain.Peer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
-import java.util.List;
 
 
 @Service
@@ -19,17 +18,17 @@ public class JenkinsHandler {
     public static final String STATUS = "status";
     public static final String SUB = "sub";
     public static final String UNSUB = "unsub";
-    public static final String FAV = "fav";
-    public static final String UNFAV = "unfav";
-    public static final String START = "start";
     public static final String START_LAST = "start last";
+    public static final String START = "start";
     public static final String LOG = "log";
 
-    private final JenkinsProvider jenkinsProvider;
-    private final JobHandler jobHandler;
+    private final JobHandler handlerJob;
+    private final ListHandler listHandler;
+    private final StatusHandler statusHandler;
 
     public String onMessage(Message message) {
         String text = message.getText().trim();
+        Peer sender = message.getSender();
         if (text.matches("^" + JOBS + "$")) {
             return Pretty.toString(Arrays.asList("list <filter criteria>",
                                                  "job <name> status",
@@ -40,28 +39,16 @@ public class JenkinsHandler {
         } else {
             String tail = message.getText().replace(JOBS, "").trim();
             if (tail.matches("^" + STATUS + "$")) {
-                return statusHandler();
+                return statusHandler.handle("", sender);
             } else if (tail.matches("^" + LIST + ".*$")) {
-                return listHandler(tail.replace(LIST, "").trim());
+                return listHandler.handle(tail.replace(LIST, "").trim(), sender);
             } else if (tail.matches("^" + JOB + ".*$")) {
-                return jobHandler.handle(tail.replace(JOB, "").trim());
+                return handlerJob.handle(tail.replace(JOB, "").trim(), sender);
             }
         }
         return "Нет такой комманды [" + text + "] =_=";
     }
 
-    private String statusHandler() {
-        return "Состояние " + jenkinsProvider.getStatus();
-    }
-
-    private String listHandler(String tail) {
-        if (tail.length() > 0) {
-            List<String> jobs = jenkinsProvider.getFilteredJobs(tail);
-            return String.format("Jobs [%d]: \n%s", jobs.size(), String.join("\n", Pretty.toString(jobs)));
-        } else {
-            return String.format("Jobs: \n%s", String.join("\n", jenkinsProvider.getAllJobNames()));
-        }
-    }
 
 }
 
