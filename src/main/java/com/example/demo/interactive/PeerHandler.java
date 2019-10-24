@@ -17,6 +17,7 @@ import im.dlg.botsdk.light.MessageListener;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
@@ -39,14 +40,20 @@ public class PeerHandler implements MessageListener, InteractiveEventListener {
     private PeerInputHandler activeTextRequest = null;
     
     private PeerInputHandler activeSelectHandler = null;
-    private String activeSelectIdentifier = null;
+    private UUID activeSelectUuid = null;
 
+    private UUID buttonsMessageUuid = null;
+    private boolean resetButtonsUuid = false;
+    
     @Override
     public void onMessage(Message message) {
         onMessage(message.getText().trim());
     }
 
     public void onMessage(String message) {
+        resetButtonsUuid = true;
+        resetSelectHandler();
+        
         if(!message.startsWith("/")) {
             activeTextRequest.accept(message);
             activeTextRequest = null;
@@ -68,24 +75,20 @@ public class PeerHandler implements MessageListener, InteractiveEventListener {
             response = rootHandler.getStashHandler().onMessage(peer, message);
         }
 
-        if(response == null || !response.equals(DELAYED_COMMAND)) {
-            rootHandler.getBotProvider().getBot().messaging().sendText(
-                    peer,
-                    Optional.ofNullable(response).orElse("Нет такой команды :) " + message)
-            );
-        }
+        if(response == null || !response.equals(DELAYED_COMMAND))
+            sendMessage(Optional.ofNullable(response).orElse("Нет такой команды :) " + message));
     }
     
     @Override
     public void onEvent(InteractiveEvent event) {
         if(event.getId().startsWith("request_")) {
-            if(activeSelectHandler != null && event.getId().startsWith(activeSelectIdentifier)) {
+            if(activeSelectHandler != null && event.getMid().equals(activeSelectUuid)) {
                 activeSelectHandler.accept(event.getValue());
-                activeSelectHandler = null;
+                resetSelectHandler();
             }
             return;
         }
-        activeSelectHandler = null;
+        resetSelectHandler();
         
         UUID uuid = UUID.fromString(event.getValue());
         log.info("Received action {}", uuid);
@@ -112,11 +115,7 @@ public class PeerHandler implements MessageListener, InteractiveEventListener {
         }
     }
     
-    @Deprecated
-    protected void renderButtons(ButtonAction action, List<Button> buttons) {
-        renderButtons(action, null, buttons);
-    }
-    
+    @SneakyThrows
     protected void renderButtons(ButtonAction action, String title, List<Button> buttons) {
         if(action != null && action.getPrevious() != null) {
             buttons = new ArrayList<>(buttons);
@@ -140,17 +139,29 @@ public class PeerHandler implements MessageListener, InteractiveEventListener {
         }
 
         InteractiveGroup group = new InteractiveGroup(null, title, actions);
-        rootHandler.getBotProvider().getBot().interactiveApi().send(peer, group);
+        
+        if(resetButtonsUuid && buttonsMessageUuid != null) {
+            rootHandler.getBotProvider().getBot().messaging().delete(buttonsMessageUuid);
+            buttonsMessageUuid = null;
+        }
+        resetButtonsUuid = false;
+        
+        if(buttonsMessageUuid != null) {
+            rootHandler.getBotProvider().getBot().interactiveApi().update(buttonsMessageUuid, group).get();
+        } else {
+            buttonsMessageUuid = rootHandler.getBotProvider().getBot().interactiveApi().send(peer, group).get();
+        }
     }
     
     public void requestText(String message, PeerInputHandler handler) {
-        rootHandler.getBotProvider().getBot().messaging().sendText(peer, message);
+        sendMessage(message);
         activeTextRequest = handler;
     }
     
+    @SneakyThrows
     public void requestSelect(String message, List<Entity> entities, PeerInputHandler handler) {
         activeSelectHandler = handler;
-        activeSelectIdentifier = "request_" + UUID.randomUUID();
+        String activeSelectIdentifier = "request_" + UUID.randomUUID(); // TODO: remove
         
         List<InteractiveAction> actions = new ArrayList<>();
         int counter = 0;
@@ -164,11 +175,22 @@ public class PeerHandler implements MessageListener, InteractiveEventListener {
         }
 
         InteractiveGroup group = new InteractiveGroup(null, message, actions);
-        rootHandler.getBotProvider().getBot().interactiveApi().send(peer, group);
+        activeSelectUuid = rootHandler.getBotProvider().getBot().interactiveApi().send(peer, group).get();
+        
+        resetButtonsUuid = true;
     }
     
     public void sendMessage(String message) {
         rootHandler.getBotProvider().getBot().messaging().sendText(peer, message);
+        resetButtonsUuid = true;
+    }
+    
+    private void resetSelectHandler() {
+        activeSelectHandler = null;
+        if(activeSelectUuid != null) {
+            rootHandler.getBotProvider().getBot().messaging().delete(activeSelectUuid);
+            activeSelectUuid = null;
+        }
     }
     
 }
