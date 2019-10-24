@@ -1,5 +1,7 @@
 package com.example.demo.jenkins.handlers;
 
+import com.example.demo.BotProvider;
+import com.example.demo.interactive.PeerHandler;
 import com.example.demo.jenkins.provider.JenkinsProviderImpl;
 import com.example.demo.jenkins.subscriptions.CommonEventSubscription;
 import com.example.demo.jenkins.subscriptions.service.SubscriptionService;
@@ -12,6 +14,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -20,12 +24,12 @@ import java.util.Date;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class JobHandler implements Handler {
+public class JobHandler {
     private final JenkinsProviderImpl jenkinsProvider;
     private final SubscriptionService subscriptionService;
+    private final BotProvider botProvider;
 
-    @Override
-    public String handle(String tail, Peer sender) {
+    public String handle(String tail, PeerHandler peerHandler) {
         for (String operator : Arrays.asList(CommandList.STATUS,
                                              CommandList.UNSUB,
                                              CommandList.SUB,
@@ -38,11 +42,15 @@ public class JobHandler implements Handler {
                 if (operator.equals(CommandList.STATUS)) {
                     return statusHandler(newTail);
                 } else if (operator.equals(CommandList.UNSUB)) {
-                    return subscribeHandler(newTail, false, sender);
+                    return subscribeHandler(newTail, false, peerHandler.getPeer());
                 } else if (operator.equals(CommandList.SUB)) {
-                    return subscribeHandler(newTail, true, sender);
+                    return subscribeHandler(newTail, true, peerHandler.getPeer());
                 } else if (operator.equals(CommandList.START_LAST)) {
-                    return startLastHandler(newTail, sender);
+                    return startLastHandler(newTail, peerHandler.getPeer());
+                } else if (operator.equals(CommandList.LOG)) {
+                    return logHandler(newTail, peerHandler.getPeer());
+                } else if (operator.equals(CommandList.START)) {
+                    //  return startLastHandler(newTail, peerHandler.getPeer());
                 }
             }
         }
@@ -116,5 +124,20 @@ public class JobHandler implements Handler {
         }
     }
 
+    private String logHandler(String jobName, Peer sender) {
+        try {
+            String log = jenkinsProvider.getJob(jobName).details().getLastBuild().details().getConsoleOutputText();
+            File f = File.createTempFile("temp-logs-out", ".log");
+            try (FileWriter fw = new FileWriter(f)) {
+                fw.write(log);
+            }
+            botProvider.getBot().messaging().sendFile(sender, f);
+            return "Выгрузка лога скоро начнется";
+        } catch (Exception e) {
+            log.error("Не удалось получить лог для job " + jobName, e);
+            return "Не удалось выгрузить файл лога послденего билда " + jobName;
+        }
+
+    }
 
 }

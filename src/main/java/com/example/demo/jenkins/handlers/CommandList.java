@@ -9,5 +9,5 @@ public class CommandList {
     public static final String UNSUB = "unsub";
     public static final String START_LAST = "start last";
     public static final String START = "start";
-    public static final String LOG = "log";
+    public static final String LOG = "log last";
 }

@@ -7,11 +7,10 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class StatusHandler implements Handler {
+public class StatusHandler {
     private final JenkinsProviderImpl jenkinsProvider;
 
-    @Override
-    public String handle(String tail, Peer sender) {
+    public String handle() {
         return "Состояние " + jenkinsProvider.getStatus();
     }
 }

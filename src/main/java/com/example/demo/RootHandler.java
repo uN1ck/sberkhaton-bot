@@ -4,6 +4,7 @@ import com.example.demo.interactive.Category;
 import com.example.demo.interactive.PeerHandler;
 import com.example.demo.interactive.SampleCategoryImpl;
 import com.example.demo.jenkins.handlers.JenkinsHandler;
+import com.example.demo.jenkins.interactive.JenkinsCategory;
 import com.example.demo.stash.handler.StashHandler;
 import im.dlg.botsdk.domain.InteractiveEvent;
 import im.dlg.botsdk.domain.Message;
@@ -29,7 +30,7 @@ public class RootHandler implements MessageListener, InteractiveEventListener {
     private final BotProvider botProvider;
     private final List<Category> categories;
 
-    private final JenkinsHandler jenkinsHandler;
+    private final JenkinsCategory jenkinsCategory;
     private final StashHandler stashHandler;
 
     private final SampleCategoryImpl sample;

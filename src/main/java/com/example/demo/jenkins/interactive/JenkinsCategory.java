@@ -1,9 +1,11 @@
 package com.example.demo.jenkins.interactive;
 
 import com.example.demo.interactive.Category;
+import com.example.demo.interactive.PeerHandler;
 import com.example.demo.interactive.model.Action;
 import com.example.demo.interactive.model.Entity;
 import com.example.demo.jenkins.dto.JobDto;
+import com.example.demo.jenkins.handlers.JenkinsHandler;
 import com.example.demo.jenkins.provider.JenkinsProviderImpl;
 import com.google.common.collect.ImmutableList;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +21,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class JenkinsCategory implements Category {
     private final JenkinsProviderImpl jenkinsProvider;
+    private final JenkinsHandler jenkinsHandler;
 
     @Override
     public String getCommand() {
@@ -68,5 +71,22 @@ public class JenkinsCategory implements Category {
                              new Action("/jobs job %s start last", "Перезапуск"),
                              new Action("/jobs job %s start", "Запуск"),
                              new Action("/jobs job %s log last", "Лог последнего запуска"));
+    }
+
+
+    public String onMessage(PeerHandler peerHandler, String message) {
+        return jenkinsHandler.onMessage(peerHandler, message);
+
+//        List<Entity> entities = ImmutableList.of(
+//                new Entity("2", "-2-"),
+//                new Entity("3", "-3-"),
+//                new Entity("4", "-4-")
+//        );
+//
+//        peerHandler.requestSelect("Сделай свой выбор",
+//                                  entities,
+//                                  identifier -> peerHandler.sendMessage("You selected " + identifier));
+//
+//        return PeerHandler.DELAYED_COMMAND;
     }
 }

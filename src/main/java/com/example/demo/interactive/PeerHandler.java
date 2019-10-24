@@ -14,6 +14,7 @@ import im.dlg.botsdk.domain.interactive.InteractiveButton;
 import im.dlg.botsdk.domain.interactive.InteractiveGroup;
 import im.dlg.botsdk.light.InteractiveEventListener;
 import im.dlg.botsdk.light.MessageListener;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,6 +27,7 @@ public class PeerHandler implements MessageListener, InteractiveEventListener {
     public static final String DELAYED_COMMAND = "~DELAYED~";
 
     private final RootHandler rootHandler;
+    @Getter
     private final Peer peer;
     
     private final Map<String, CategoryInteractiveHandler> handlers = new HashMap<>();
@@ -59,7 +61,7 @@ public class PeerHandler implements MessageListener, InteractiveEventListener {
         if(message.startsWith("/sample")) {
             response = rootHandler.getSample().onMessage(this, message);
         } else if (message.matches("^/jobs.*")) {
-            response = rootHandler.getJenkinsHandler().onMessage(peer, message);
+            response = rootHandler.getJenkinsCategory().onMessage(this, message);
         } else if (message.matches("^/stash.*")) {
             response = rootHandler.getStashHandler().onMessage(peer, message);
         }
