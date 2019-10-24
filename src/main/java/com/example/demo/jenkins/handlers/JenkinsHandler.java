@@ -1,53 +1,51 @@
 package com.example.demo.jenkins.handlers;
 
-import com.example.demo.jenkins.JenkinsProvider;
-import com.offbytwo.jenkins.model.Job;
-import im.dlg.botsdk.domain.Message;
+import com.example.demo.stash.util.Pretty;
 import im.dlg.botsdk.domain.Peer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Nullable;
-import java.util.stream.Collectors;
+import java.util.Arrays;
+
 
 @Service
 @RequiredArgsConstructor
 public class JenkinsHandler {
-    private final JenkinsProvider jenkinsProvider;
+    public static final String JOBS = "/jobs";
+    public static final String LIST = "list";
+    public static final String JOB = "job";
+    public static final String STATUS = "status";
+    public static final String SUB = "sub";
+    public static final String UNSUB = "unsub";
+    public static final String START_LAST = "start last";
+    public static final String START = "start";
+    public static final String LOG = "log";
 
-    @Nullable
-    public String onMessage(Peer peer, String message) {
-        String tail = message.replace("/jobs", "").trim();
-        if (tail.matches("^status$")) {
-            return statusHandler();
-        } else if (tail.matches("^list.*$")) {
-            return listHandler(tail.replace("list", "").trim());
-        } else if (tail.matches("^job.*$")) {
-            return jobHandler(tail.replace("job", "").trim());
-        }
-        return null;
-    }
+    private final JobHandler handlerJob;
+    private final ListHandler listHandler;
+    private final StatusHandler statusHandler;
 
-
-    private String statusHandler() {
-        return "Состояние Jenkins " + jenkinsProvider.getStatus();
-    }
-
-    private String listHandler(String tail) {
-        if (tail.length() > 0) {
-            return "Jobs: \n- " + jenkinsProvider.getFilteredJobs(tail)
-                    .stream()
-                    .map(Job::getName)
-                    .collect(Collectors.joining("\n- "));
+    public String onMessage(Peer sender, String message) {
+        if (message.matches("^" + JOBS + "$")) {
+            return Pretty.toString(Arrays.asList("list <filter criteria>",
+                                                 "job <name> status",
+                                                 "job <name> sub/unsub",
+                                                 "job <name> start last",
+                                                 "job <name> fav/unfav",
+                                                 "job <name> start <args>"));
         } else {
-            return "Jobs: \n- " + jenkinsProvider.getAllJobs()
-                    .stream()
-                    .map(Job::getName)
-                    .collect(Collectors.joining("\n- "));
+            String tail = message.replace(JOBS, "").trim();
+            if (tail.matches("^" + STATUS + "$")) {
+                return statusHandler.handle("", sender);
+            } else if (tail.matches("^" + LIST + ".*$")) {
+                return listHandler.handle(tail.replace(LIST, "").trim(), sender);
+            } else if (tail.matches("^" + JOB + ".*$")) {
+                return handlerJob.handle(tail.replace(JOB, "").trim(), sender);
+            }
         }
+        return "Нет такой комманды [" + message + "] =_=";
     }
 
-    private String jobHandler(String tail) {
-        return "Not implemented yet";
-    }
+
 }
+

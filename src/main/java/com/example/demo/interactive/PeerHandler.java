@@ -74,6 +74,9 @@ public class PeerHandler implements MessageListener, InteractiveEventListener {
         } else if (message.matches("^/stash.*")) {
             response = rootHandler.getStashHandler().onMessage(peer, message);
         }
+        else if (message.matches("^//stash.*")) {
+            response = rootHandler.getStashCategory().onMessage(this, message);
+        }
 
         if(response == null || !response.equals(DELAYED_COMMAND))
             sendMessage(Optional.ofNullable(response).orElse("Нет такой команды :) " + message));

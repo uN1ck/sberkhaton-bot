@@ -4,6 +4,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
 
+import javax.annotation.Nullable;
+
 @Builder
 @Getter
 public class RestCallConfiguration {
@@ -15,4 +17,6 @@ public class RestCallConfiguration {
     private String path;
     @NonNull
     private HttpRequestType requestType;
+    @Nullable
+    private String body;
 }
