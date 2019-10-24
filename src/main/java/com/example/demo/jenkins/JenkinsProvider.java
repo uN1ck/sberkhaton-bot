@@ -7,9 +7,11 @@ import com.offbytwo.jenkins.model.Job;
 import java.util.List;
 
 public interface JenkinsProvider {
-    List<JobDto> getJobsOnLevel(String jobIdentifier, String filter);
+    List<JobDto> getJobsOnLevel(String jobIdentifier);
 
-    List<JobDto> getJobsOnLevel(String filter);
+    List<JobDto> getJobsOnLevel();
+
+    List<JobDto> getFilteredJobs(String filter);
 
     Job getJob(String jobIdentifier);
 

@@ -47,20 +47,21 @@ public class JenkinsCategory implements Category {
 
     @Override
     public List<Entity> listEntities(String pattern, String[] previous) {
-        //TODO: Дождаться когда можно фильтрить
-        List<Entity> result;
-        if (previous.length == 0) {
-            result = jenkinsProvider.getJobsOnLevel(pattern).stream().map(
-                    jobDto -> new Entity(jobDto.getFullName(), jobDto.getDisplayName(),
-                                         jobDto.getJobType() == JobDto.JobType.FOLDER)
-            ).collect(Collectors.toList());
+        List<JobDto> jobs;
+        if (pattern.length() > 0) {
+            jobs = jenkinsProvider.getFilteredJobs(pattern);
         } else {
-            result = jenkinsProvider.getJobsOnLevel(previous[previous.length - 1], pattern).stream().map(
-                    jobDto -> new Entity(jobDto.getFullName(), jobDto.getDisplayName(),
-                                         jobDto.getJobType() == JobDto.JobType.FOLDER)
-            ).collect(Collectors.toList());
+            if (previous.length == 0) {
+                jobs = jenkinsProvider.getJobsOnLevel();
+            } else {
+                jobs = jenkinsProvider.getJobsOnLevel(previous[previous.length - 1]);
+            }
         }
-        return result;
+        return jobs.stream()
+                   .map(jobDto -> new Entity(jobDto.getFullName(),
+                                             jobDto.getDisplayName(),
+                                             jobDto.getJobType() == JobDto.JobType.FOLDER))
+                   .collect(Collectors.toList());
     }
 
     @Override
@@ -73,20 +74,7 @@ public class JenkinsCategory implements Category {
                              new Action("/jobs job %s log last", "Лог последнего запуска"));
     }
 
-
     public String onMessage(PeerHandler peerHandler, String message) {
         return jenkinsHandler.onMessage(peerHandler, message);
-
-//        List<Entity> entities = ImmutableList.of(
-//                new Entity("2", "-2-"),
-//                new Entity("3", "-3-"),
-//                new Entity("4", "-4-")
-//        );
-//
-//        peerHandler.requestSelect("Сделай свой выбор",
-//                                  entities,
-//                                  identifier -> peerHandler.sendMessage("You selected " + identifier));
-//
-//        return PeerHandler.DELAYED_COMMAND;
     }
 }

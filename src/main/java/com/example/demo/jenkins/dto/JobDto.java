@@ -21,7 +21,9 @@ public class JobDto {
                      .build();
     }
 
+
     public static enum JobType {
         FOLDER, JOB
     }
+
 }

@@ -19,6 +19,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -28,7 +29,6 @@ public class JenkinsProviderImpl implements JenkinsProvider {
     @PostConstruct
     private void init() {
         try {
-            //TODO: Скрыть креды?
             jenkinsServer = new JenkinsServer(new URI("http://172.30.18.91:8080"),
                                               "admin",
                                               "11629d94574d44abbadc56d31b2104304f");
@@ -42,7 +42,7 @@ public class JenkinsProviderImpl implements JenkinsProvider {
 
 
     @Override
-    public List<JobDto> getJobsOnLevel(String jobIdentifier, String filter) {
+    public List<JobDto> getJobsOnLevel(String jobIdentifier) {
         try {
             Optional<FolderJob> folderJob = jenkinsServer.getFolderJob(jenkinsServer.getJob(jobIdentifier));
             if (folderJob != null && folderJob.isPresent()) {
@@ -51,9 +51,6 @@ public class JenkinsProviderImpl implements JenkinsProvider {
                                 .stream()
                                 .map(this::jobMapper)
                                 .filter(Objects::nonNull)
-                                .filter(jobDto -> jobDto.getName()
-                                                        .toLowerCase()
-                                                        .contains(filter.toLowerCase()))
                                 .collect(Collectors.toList());
             } else {
                 throw new JenkinsException("Не удалось получить FolderJob от " + jobIdentifier);
@@ -66,21 +63,50 @@ public class JenkinsProviderImpl implements JenkinsProvider {
 
 
     @Override
-    public List<JobDto> getJobsOnLevel(String filter) {
+    public List<JobDto> getJobsOnLevel() {
         try {
             return jenkinsServer.getJobs()
                                 .values()
                                 .stream()
-                                .map(this::jobMapper)
-                                .filter(Objects::nonNull)
-                                .filter(jobDto -> jobDto.getName()
-                                                        .toLowerCase()
-                                                        .contains(filter.toLowerCase()))
+                                .map(job -> this.jobMapper(job))
                                 .collect(Collectors.toList());
         } catch (Exception e) {
             log.error("Не удалось");
             return Collections.emptyList();
         }
+    }
+
+    @Override
+    public List<JobDto> getFilteredJobs(String filter) {
+        try {
+            List<JobDto> j = jenkinsServer.getJobs()
+                                          .values()
+                                          .stream()
+                                          .flatMap(this::getChildJobs)
+                                          .map(this::jobMapper)
+                                          .filter(jobDto -> jobDto.getName()
+                                                                  .toLowerCase()
+                                                                  .contains(filter.toLowerCase()))
+                                          .collect(Collectors.toList());
+            return j;
+        } catch (Exception e) {
+            log.error("Не удалось");
+            return Collections.emptyList();
+        }
+    }
+
+    private Stream<Job> getChildJobs(Job job) {
+        try {
+            Optional<FolderJob> folderJob = jenkinsServer.getFolderJob(job);
+            if (folderJob.isPresent()) {
+                return folderJob.get().getJobs().values().stream();
+            } else {
+                return Collections.singletonList(job).stream();
+            }
+        } catch (Exception e) {
+            log.error("Не удалось получить дочерние JOB-ы из " + job, e);
+        }
+        return Stream.empty();
     }
 
     private JobDto jobMapper(Job job) {
@@ -91,10 +117,9 @@ public class JenkinsProviderImpl implements JenkinsProvider {
                     JobDto.JobType.JOB);
         } catch (IOException e) {
             log.error("Не удалось собрать DTO от job " + job, e);
-            return null;
+            throw new JenkinsException("Не удалось собрать DTO от job " + job);
         }
     }
-
 
     @Override
     public Job getJob(String jobIdentifier) {
@@ -105,11 +130,11 @@ public class JenkinsProviderImpl implements JenkinsProvider {
         }
     }
 
-
     @Override
     public JenkinsStatusDto getStatus() {
         return jenkinsServer.isRunning() ?
                 new JenkinsStatusDto(JenkinsStatusDto.Status.OK, jenkinsServer.getVersion().getLiteralVersion()) :
                 new JenkinsStatusDto(JenkinsStatusDto.Status.FAIL, jenkinsServer.getVersion().getLiteralVersion());
     }
+
 }
