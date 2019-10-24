@@ -25,7 +25,7 @@ repositories {
 
 dependencies {
     compile 'com.offbytwo.jenkins:jenkins-client:0.3.8'
-    compile 'im.dlg:bot-sdk:1.2'
+    compile 'im.dlg:bot-sdk:2.0.0'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     compileOnly 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
