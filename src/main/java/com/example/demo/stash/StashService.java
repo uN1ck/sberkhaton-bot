@@ -1,5 +1,7 @@
 package com.example.demo.stash;
 
+import com.example.demo.stash.dto.PullRequest;
+import com.example.demo.stash.dto.PullRequestShorten;
 import com.example.demo.stash.dto.StashProject;
 import com.example.demo.stash.dto.StashRepository;
 import com.example.demo.stash.exceptions.StashConnectionException;
@@ -66,4 +68,33 @@ public class StashService {
         return responseParsingService.listRepositories(json);
     }
 
+    @NonNull
+    public List<PullRequestShorten> listPullRequests(String stashProjectKey, String repoName) throws StashConnectionException, StashResponseParsingException {
+        RestCallConfiguration configuration = RestCallConfiguration.builder()
+                .username(USERNAME)
+                .password(PASSWORD)
+                .requestType(HttpRequestType.GET)
+                .path(BASE_PATH + String.format("/projects/%s/repos/%s/pull-requests",
+                        stashProjectKey,
+                        repoName)
+                )
+                .build();
+        String json = execRequest(configuration);
+        return responseParsingService.listPullRequests(json);
+    }
+
+    public PullRequest getPullRequest(String stashProjectKey, String repoName, String prId) throws StashConnectionException, StashResponseParsingException {
+        RestCallConfiguration configuration = RestCallConfiguration.builder()
+                .username(USERNAME)
+                .password(PASSWORD)
+                .requestType(HttpRequestType.GET)
+                .path(BASE_PATH + String.format("/projects/%s/repos/%s/pull-requests/%s",
+                        stashProjectKey,
+                        repoName,
+                        prId)
+                )
+                .build();
+        String json = execRequest(configuration);
+        return responseParsingService.getPullRequest(json);
+    }
 }

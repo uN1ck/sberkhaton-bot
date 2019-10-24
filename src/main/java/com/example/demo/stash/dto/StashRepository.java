@@ -1,5 +1,6 @@
 package com.example.demo.stash.dto;
 
+import com.example.demo.stash.util.Pretty;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -13,7 +14,8 @@ public class StashRepository {
 
     @Override
     public String toString() {
-        return String.format("{ name = %s; state = %s; isForkable = %s; isPublic = %s}",
-                name, state, isForkable, isPublic);
+        return String.format("{ Название = %s; Состояние = %s; Можно форкать = %s; Публичный = %s }",
+                name, state.equals("AVAILABLE") ? "Доступен" : "Недоступен",
+                Pretty.toString(isForkable), Pretty.toString(isPublic));
     }
 }

@@ -1,8 +1,7 @@
 package com.example.demo.stash.handler;
 
 import com.example.demo.stash.StashService;
-import com.example.demo.stash.exceptions.StashConnectionException;
-import com.example.demo.stash.exceptions.StashResponseParsingException;
+import com.example.demo.stash.exceptions.StashCommandException;
 import com.example.demo.stash.util.Pretty;
 import im.dlg.botsdk.domain.Message;
 import lombok.RequiredArgsConstructor;
@@ -10,9 +9,13 @@ import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
 
+import static com.example.demo.stash.handler.StashHandler.Commands.*;
+import static com.example.demo.stash.handler.StashHandler.Placeholders.*;
+
 @Service
 @RequiredArgsConstructor
 public class StashHandler {
+
     private final StashService stashService;
 
     public String onMessage(Message message) {
@@ -23,22 +26,85 @@ public class StashHandler {
         }
     }
 
-    private String onMessageInner(Message message) throws StashResponseParsingException, StashConnectionException {
-        if(message.getText().trim().equals("/stash")) {
-            return Pretty.toString(Arrays.asList("list projects", "list repos <project-key>"));
+    private String formatCommand(String additionalParams) {
+        return String.format("%s %s", ROOT_COMMAND, additionalParams);
+    }
+
+    private String onMessageInner(Message message) throws Exception {
+        if (message.getText().trim().equals(ROOT_COMMAND)) {
+            return Pretty.toString(
+                    Arrays.asList(
+                            formatCommand(
+                                    String.format("%s %s", LIST_COMMAND, PROJECT_COMMAND)
+                            ),
+                            formatCommand(
+                                    String.format("%s %s %s", LIST_COMMAND, REPO_COMMAND, PROJECT_KEY_PLACEHOLDER)
+                            ),
+                            formatCommand(
+                                    String.format("%s %s %s %s", LIST_COMMAND, PR_COMMAND, PROJECT_KEY_PLACEHOLDER, REPO_NAME_PLACEHOLDER)
+                            ),
+                            formatCommand(
+                                    String.format("%s %s %s %s %s", GET_COMMAND, PR_COMMAND, PROJECT_KEY_PLACEHOLDER, REPO_NAME_PLACEHOLDER, PR_KEY_PLACEHOLDER)
+                            )
+                    )
+            );
         }
 
-        String tail = message.getText().replace("/stash", "").trim();
-        if (tail.matches("^list.*")) {
-            String listTail = tail.replace("list", "").trim();
-            if (listTail.matches("^projects.*$")) {
-                return Pretty.toString(stashService.listAllProjects());
+        String tail = message.getText().replace(ROOT_COMMAND, "").trim();
+        if (tail.matches(String.format("^%s.*", LIST_COMMAND))) {
+            return listCommand(tail);
+        } else if (tail.matches(String.format("^%s.*", GET_COMMAND)))
+            return getCommand(tail);
+        return null;
+    }
+
+    private String listCommand(String tail) throws Exception {
+        String listTail = tail.replace(LIST_COMMAND, "").trim();
+        if (listTail.matches(String.format("^%s.*$", PROJECT_COMMAND))) {
+            return Pretty.toString(stashService.listAllProjects());
+        } else if (listTail.matches(String.format("^%s.*", REPO_COMMAND))) {
+            String stashProjectKey = listTail.replace(REPO_COMMAND, "").trim();
+            return Pretty.toString(stashService.listRepositories(stashProjectKey));
+        } else if (listTail.matches(String.format("^%s.*", PR_COMMAND))) {
+            String[] keys = listTail.replace(PR_COMMAND, "").trim().split("\\s+");
+            if (keys.length != 2) {
+                throw new StashCommandException(
+                        String.format("Необходимо передать два аргумента: %s, %s",
+                                PROJECT_KEY_PLACEHOLDER, REPO_NAME_PLACEHOLDER)
+                );
             }
-            if (listTail.matches("^repos.*")) {
-                String stashProjectKey = listTail.replace("repos", "").trim();
-                return Pretty.toString(stashService.listRepositories(stashProjectKey));
-            }
+            return Pretty.toString(stashService.listPullRequests(keys[0], keys[1]));
         }
         return null;
+    }
+
+    private String getCommand(String tail) throws Exception {
+        String listTail = tail.replace(GET_COMMAND, "").trim();
+        if (listTail.matches(String.format("^%s.*$", PR_COMMAND))) {
+            String[] keys = listTail.replace(PR_COMMAND, "").trim().split("\\s+");
+            if (keys.length != 3) {
+                throw new StashCommandException(
+                        String.format("Необходимо передать три аргумента: %s, %s, %s",
+                                PROJECT_KEY_PLACEHOLDER, REPO_NAME_PLACEHOLDER, PR_KEY_PLACEHOLDER)
+                );
+            }
+            return stashService.getPullRequest(keys[0], keys[1], keys[2]).toString();
+        }
+        return null;
+    }
+
+    public static class Commands {
+        public static final String ROOT_COMMAND = "/stash";
+        static final String LIST_COMMAND = "list";
+        static final String GET_COMMAND = "get";
+        static final String PROJECT_COMMAND = "project";
+        static final String REPO_COMMAND = "repo";
+        static final String PR_COMMAND = "pr";
+    }
+
+    static class Placeholders {
+        static final String PROJECT_KEY_PLACEHOLDER = "<Ключ проекта>";
+        static final String REPO_NAME_PLACEHOLDER = "<Название репозитория>";
+        static final String PR_KEY_PLACEHOLDER = "<Ключ PR>";
     }
 }

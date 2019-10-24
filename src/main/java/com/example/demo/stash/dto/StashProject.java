@@ -11,6 +11,6 @@ public class StashProject {
 
     @Override
     public String toString() {
-        return String.format("{ key = %s; name = %s }", key, name);
+        return String.format("{ Ключ проекта = %s; Название = %s }", key, name);
     }
 }

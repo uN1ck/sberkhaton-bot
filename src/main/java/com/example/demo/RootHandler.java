@@ -27,7 +27,7 @@ public class RootHandler implements MessageListener {
         String response = null;
         if (message.getText().matches("^/jobs.*")) {
             response = jenkinsHandler.onMessage(message);
-        } else if (message.getText().matches("^/stash.*")) {
+        } else if (message.getText().matches(String.format("^%s.*", StashHandler.Commands.ROOT_COMMAND))) {
             response = stashHandler.onMessage(message);
         }
         botProvider.getBot().messaging().sendText(
