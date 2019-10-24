@@ -64,6 +64,7 @@ public class Interactive implements InteractiveEventListener {
             }
         } catch(Exception e) {
             log.error("Exception during action handling", e);
+            botProvider.getBot().messaging().sendText(event.getPeer(), e.getMessage());
         }
     }
     

@@ -1,14 +1,15 @@
 package com.example.demo.stash.handler;
 
 import com.example.demo.stash.StashService;
+import com.example.demo.stash.dto.PullRequestShorten;
 import com.example.demo.stash.exceptions.StashCommandException;
 import com.example.demo.stash.util.Pretty;
-import im.dlg.botsdk.domain.Message;
 import im.dlg.botsdk.domain.Peer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
+import java.util.List;
 
 import static com.example.demo.stash.handler.StashHandler.Commands.*;
 import static com.example.demo.stash.handler.StashHandler.Placeholders.*;
@@ -27,15 +28,12 @@ public class StashHandler {
         }
     }
 
-    private String onMessageInner(Peer peer, String message) throws StashResponseParsingException, StashConnectionException {
-        if(message.trim().equals("/stash")) {
-            return Pretty.toString(Arrays.asList("list projects", "list repos <project-key>"));
-    private String formatCommand(String additionalParams) {
-        return String.format("%s %s", ROOT_COMMAND, additionalParams);
+    private String formatCommand(String additionalCommand) {
+        return String.format("%s %s", ROOT_COMMAND, additionalCommand);
     }
 
-    private String onMessageInner(Message message) throws Exception {
-        if (message.getText().trim().equals(ROOT_COMMAND)) {
+    private String onMessageInner(Peer peer, String message) {
+        if (message.trim().equals(ROOT_COMMAND)) {
             return Pretty.toString(
                     Arrays.asList(
                             formatCommand(
@@ -60,7 +58,7 @@ public class StashHandler {
             );
         }
 
-        String tail = message.getText().replace(ROOT_COMMAND, "").trim();
+        String tail = message.replace(ROOT_COMMAND, "").trim();
         if (tail.matches(String.format("^%s.*", LIST_COMMAND))) {
             return listCommand(tail);
         } else if (tail.matches(String.format("^%s.*", GET_COMMAND)))
@@ -69,10 +67,12 @@ public class StashHandler {
             return mergeCommand(tail);
         else if (tail.matches(String.format("^%s.*", DELETE_COMMAND)))
             return deleteCommand(tail);
-        return null;
+        else if (tail.matches(String.format("^%s.*", UNSUBSCRIBE_COMMAND)))
+
+            return null;
     }
 
-    private String listCommand(String tail) throws Exception {
+    private String listCommand(String tail) {
         String listTail = tail.replace(LIST_COMMAND, "").trim();
         if (listTail.matches(String.format("^%s.*$", PROJECT_COMMAND))) {
             return Pretty.toString(stashService.listAllProjects());
@@ -92,7 +92,7 @@ public class StashHandler {
         return null;
     }
 
-    private String getCommand(String tail) throws Exception {
+    private String getCommand(String tail) {
         String listTail = tail.replace(GET_COMMAND, "").trim();
         if (listTail.matches(String.format("^%s.*$", PR_COMMAND))) {
             String[] keys = listTail.replace(PR_COMMAND, "").trim().split("\\s+");
@@ -107,7 +107,7 @@ public class StashHandler {
         return null;
     }
 
-    private String mergeCommand(String tail) throws Exception {
+    private String mergeCommand(String tail) {
         String listTail = tail.replace(MERGE_COMMAND, "").trim();
         if (listTail.matches(String.format("^%s.*$", PR_COMMAND))) {
             String[] keys = listTail.replace(PR_COMMAND, "").trim().split("\\s+");
@@ -122,7 +122,7 @@ public class StashHandler {
         return null;
     }
 
-    private String deleteCommand(String tail) throws Exception {
+    private String deleteCommand(String tail) {
         String listTail = tail.replace(DELETE_COMMAND, "").trim();
         if (listTail.matches(String.format("^%s.*$", PR_COMMAND))) {
             String[] keys = listTail.replace(PR_COMMAND, "").trim().split("\\s+");
@@ -137,16 +137,35 @@ public class StashHandler {
         return null;
     }
 
+    private String subscribeCommand(Peer peer, String tail) {
+        String listTail = tail.replace(SUBSCRIBE_COMMAND, "").trim();
+        if (listTail.matches(String.format("^%s.*$", REPO_COMMAND))) {
+            String[] keys = listTail.replace(REPO_COMMAND, "").trim().split("\\s+");
+            if (keys.length != 2) {
+                throw new StashCommandException(
+                        String.format("Необходимо передать 2 аргумента: %s %s",
+                                PROJECT_KEY_PLACEHOLDER, REPO_NAME_PLACEHOLDER)
+                );
+            }
+            Runnable runnable = () -> {
+                List<PullRequestShorten> pullRequests = stashService.listPullRequests(keys[0], keys[1]);
+
+            };
+        }
+    }
+
     public static class Commands {
         public static final String ROOT_COMMAND = "/stash";
-        static final String LIST_COMMAND = "list";
-        static final String GET_COMMAND = "get";
-        static final String MERGE_COMMAND = "merge";
-        static final String DELETE_COMMAND = "delete";
+        public static final String LIST_COMMAND = "list";
+        public static final String GET_COMMAND = "get";
+        public static final String MERGE_COMMAND = "merge";
+        public static final String DELETE_COMMAND = "delete";
+        public static final String SUBSCRIBE_COMMAND = "sub";
+        public static final String UNSUBSCRIBE_COMMAND = "unsub";
 
-        static final String PROJECT_COMMAND = "project";
-        static final String REPO_COMMAND = "repo";
-        static final String PR_COMMAND = "pr";
+        public static final String PROJECT_COMMAND = "project";
+        public static final String REPO_COMMAND = "repo";
+        public static final String PR_COMMAND = "pr";
     }
 
     static class Placeholders {
