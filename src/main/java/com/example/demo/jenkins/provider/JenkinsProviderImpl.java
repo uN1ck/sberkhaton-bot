@@ -23,14 +23,15 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class JenkinsProviderImpl implements JenkinsProvider {
-    public static final String NO_CRITERIA = "!#NO_CRITERIA!";
     private JenkinsServer jenkinsServer;
 
     @PostConstruct
     private void init() {
         try {
             //TODO: Скрыть креды?
-            jenkinsServer = new JenkinsServer(new URI("http://172.30.18.91:8080"), "admin", "5a73f64338824a409b159bf3f424cc80");
+            jenkinsServer = new JenkinsServer(new URI("http://172.30.18.91:8080"),
+                                              "admin",
+                                              "11629d94574d44abbadc56d31b2104304f");
 
         } catch (URISyntaxException e) {
             e.printStackTrace();

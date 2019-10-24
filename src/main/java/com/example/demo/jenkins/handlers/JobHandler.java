@@ -104,14 +104,14 @@ public class JobHandler implements Handler {
             JobWithDetails jobWithDetails = jenkinsProvider.getJob(jobName).details();
             Build b = jobWithDetails.getLastBuild();
             if (b.equals(Build.BUILD_HAS_NEVER_RUN)) {
-                return "Задача `%s` никогда не запускалась и не может быть перезапущена";
+                return String.format("Задача `%s` никогда не запускалась и не может быть перезапущена", jobName);
             } else {
                 subscribeHandler(jobName, true, sender);
                 QueueReference q = jobWithDetails.build(jobWithDetails.getLastBuild().details().getParameters(), true);
-                return "Задача `%s` запущена успешно";
+                return String.format("Задача `%s` запущена успешно", jobName);
             }
         } catch (Exception e) {
-            log.error("Ошибка при запуске задачи", e);
+            log.error("Ошибка при запуске задачи " + jobName, e);
             return "Не удалось запустить :(";
         }
     }

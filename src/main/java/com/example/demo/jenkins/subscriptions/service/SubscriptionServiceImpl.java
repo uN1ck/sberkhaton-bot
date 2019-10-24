@@ -5,11 +5,13 @@ import com.example.demo.jenkins.provider.JenkinsProviderImpl;
 import com.example.demo.jenkins.subscriptions.Subscription;
 import im.dlg.botsdk.domain.Peer;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SubscriptionServiceImpl implements SubscriptionService {
@@ -20,7 +22,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     //TODO: Изменяемо ли значение?
     @Scheduled(fixedRate = 5000)
     public void refreshSubscriptions() {
-        subscriptions.values().forEach(PersonalSubscriptionService::refreshSubscriptions);
+        try {
+            subscriptions.values().forEach(PersonalSubscriptionService::refreshSubscriptions);
+        } catch (Exception e) {
+            log.error("Ошибка при выполнении scheduled", e);
+        }
     }
 
     @Override
