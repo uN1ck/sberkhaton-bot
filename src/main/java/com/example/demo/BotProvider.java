@@ -18,7 +18,7 @@ public class BotProvider {
         BotConfig botConfig = BotConfig.Builder.aBotConfig()
                                                .withHost("hackathon-mob.transmit.im")
                                                .withPort(443)
-                                               .withToken("63b94cafdb34d02b852ea6e7f20f7a9c5cb651da").build();
+                                               .withToken("d19c2932528fa127b78736d012066af3f80516bc").build();
 
         bot = Bot.start(botConfig).get();
 

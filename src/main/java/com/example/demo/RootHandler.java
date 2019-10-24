@@ -1,5 +1,7 @@
 package com.example.demo;
 
+import com.example.demo.csm.service.CsmRequestService;
+import com.example.demo.csm.service.CsmRoutingService;
 import com.example.demo.interactive.Interactive;
 import com.example.demo.jenkins.handlers.JenkinsHandler;
 import com.example.demo.stash.handler.StashHandler;
@@ -22,6 +24,7 @@ public class RootHandler implements MessageListener {
     
     private final JenkinsHandler jenkinsHandler;
     private final StashHandler stashHandler;
+    private final CsmRoutingService csmRoutingService;
 
     @PostConstruct
     private void init() {
@@ -47,6 +50,8 @@ public class RootHandler implements MessageListener {
             response = jenkinsHandler.onMessage(peer, message);
         } else if (message.matches("^/stash.*")) {
             response = stashHandler.onMessage(peer, message);
+        }else if (message.matches("^/csm.*")) {
+            response = csmRoutingService.onMessage(peer, message);
         }
         
         botProvider.getBot().messaging().sendText(
