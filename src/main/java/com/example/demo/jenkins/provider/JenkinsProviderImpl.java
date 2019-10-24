@@ -14,10 +14,12 @@ import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -53,7 +55,7 @@ public class JenkinsProviderImpl implements JenkinsProvider {
 
     private String getAllJobNamesByFolder(Job rootJob, String result, int tabs) {
         try {
-
+            //TODO: Ломать рекурсию, когда ушли слишком далеко?
             Optional<FolderJob> folderJob = jenkinsServer.getFolderJob(rootJob);
             String currentResult = result + StringUtils.repeat("  ", tabs)
                     + "- "
@@ -82,7 +84,9 @@ public class JenkinsProviderImpl implements JenkinsProvider {
     @Override
     public List<Job> getAllJobs() {
         try {
-            return jenkinsServer.getJobs().values().stream()
+            return jenkinsServer.getJobs()
+                                .values()
+                                .stream()
                                 .map(this::getAllJobRecursive)
                                 .flatMap(Collection::stream)
                                 .collect(Collectors.toList());
@@ -95,10 +99,14 @@ public class JenkinsProviderImpl implements JenkinsProvider {
         try {
             Optional<FolderJob> folderJob = jenkinsServer.getFolderJob(rootJob);
             if (folderJob.isPresent()) {
-                return folderJob.get().getJobs().values().stream()
-                                .map(this::getAllJobRecursive)
-                                .flatMap(Collection::stream)
-                                .collect(Collectors.toList());
+                return Stream.concat(Stream.of(rootJob),
+                                     folderJob.get()
+                                              .getJobs()
+                                              .values()
+                                              .stream()
+                                              .map(this::getAllJobRecursive)
+                                              .flatMap(Collection::stream))
+                             .collect(Collectors.toList());
             } else {
                 return Collections.singletonList(rootJob);
             }
