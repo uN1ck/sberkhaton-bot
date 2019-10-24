@@ -53,18 +53,12 @@ public class RootHandler implements MessageListener {
             botProvider.getBot()
                        .messaging()
                        .sendText(sender,
-                                 "Jobs: \n- " + jenkinsProvider.getFilteredJobs(tail)
-                                                           .stream()
-                                                           .map(Job::getName)
-                                                           .collect(Collectors.joining("\n- ")));
+                                 "Jobs: \n" + jenkinsProvider.getAllJobNames());
         } else {
             botProvider.getBot()
                        .messaging()
                        .sendText(sender,
-                                 "Jobs: \n- " + jenkinsProvider.getAllJobs()
-                                                             .stream()
-                                                             .map(Job::getName)
-                                                             .collect(Collectors.joining("\n- ")));
+                                 "Jobs: \n" + jenkinsProvider.getAllJobNames());
         }
     }
 

@@ -7,6 +7,7 @@ import com.offbytwo.jenkins.JenkinsServer;
 import com.offbytwo.jenkins.model.FolderJob;
 import com.offbytwo.jenkins.model.Job;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -36,6 +37,34 @@ public class JenkinsProviderImpl implements JenkinsProvider {
         log.info("Jenkins done");
     }
 
+    @Override
+    public String getAllJobNames() {
+        String result = "";
+        try {
+            for (Job job : jenkinsServer.getJobs().values()) {
+                getAllJobNamesByFolder(job, result, 0);
+            }
+        } catch (IOException e) {
+            throw new JenkinsException("Error while accessing all jobs", e);
+        }
+        return result;
+    }
+
+
+    private void getAllJobNamesByFolder(Job rootJob, String result, int tabs) {
+        try {
+            result += StringUtils.repeat("  ", tabs) + rootJob.getName();
+            Optional<FolderJob> folderJob = jenkinsServer.getFolderJob(rootJob);
+            if (folderJob.isPresent()) {
+                int newTabs = tabs + 2;
+                for (Job job : folderJob.get().getJobs().values()) {
+                    getAllJobNamesByFolder(job, result, newTabs);
+                }
+            }
+        } catch (IOException e) {
+            throw new JenkinsException("Error while accessing all jobs", e);
+        }
+    }
 
     @Override
     public List<Job> getAllJobs() {
@@ -54,9 +83,9 @@ public class JenkinsProviderImpl implements JenkinsProvider {
             Optional<FolderJob> folderJob = jenkinsServer.getFolderJob(rootJob);
             if (folderJob.isPresent()) {
                 return folderJob.get().getJobs().values().stream()
-                           .map(this::getAllJobRecursive)
-                           .flatMap(Collection::stream)
-                           .collect(Collectors.toList());
+                                .map(this::getAllJobRecursive)
+                                .flatMap(Collection::stream)
+                                .collect(Collectors.toList());
             } else {
                 return Collections.singletonList(rootJob);
             }

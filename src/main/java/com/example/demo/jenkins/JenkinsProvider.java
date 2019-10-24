@@ -7,6 +7,8 @@ import java.util.List;
 
 public interface JenkinsProvider {
 
+    String getAllJobNames();
+
     List<Job> getAllJobs();
 
     List<Job> getFilteredJobs(String criteria);
