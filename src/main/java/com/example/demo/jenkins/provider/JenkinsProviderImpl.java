@@ -28,7 +28,7 @@ public class JenkinsProviderImpl implements JenkinsProvider {
     private void init() {
         try {
             //TODO: Скрыть креды?
-            jenkinsServer = new JenkinsServer(new URI("http://172.30.18.91:8080"), "admin", "passme");
+            jenkinsServer = new JenkinsServer(new URI("http://172.30.18.91:8080"), "admin", "5a73f64338824a409b159bf3f424cc80");
 
         } catch (URISyntaxException e) {
             e.printStackTrace();
@@ -42,28 +42,41 @@ public class JenkinsProviderImpl implements JenkinsProvider {
         String result = "";
         try {
             for (Job job : jenkinsServer.getJobs().values()) {
-                getAllJobNamesByFolder(job, result, 0);
+                result += getAllJobNamesByFolder(job, "", 0);
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new JenkinsException("Error while accessing all jobs", e);
         }
         return result;
     }
 
 
-    private void getAllJobNamesByFolder(Job rootJob, String result, int tabs) {
+    private String getAllJobNamesByFolder(Job rootJob, String result, int tabs) {
         try {
-            result += StringUtils.repeat("  ", tabs) + rootJob.getName();
+
             Optional<FolderJob> folderJob = jenkinsServer.getFolderJob(rootJob);
-            if (folderJob.isPresent()) {
+            String currentResult = result + StringUtils.repeat("  ", tabs)
+                    + "- "
+                    + getNameForJob(rootJob, folderJob.isPresent())
+                    + "\n";
+
+            if (folderJob != null && folderJob.isPresent()) {
                 int newTabs = tabs + 2;
                 for (Job job : folderJob.get().getJobs().values()) {
-                    getAllJobNamesByFolder(job, result, newTabs);
+                    currentResult += getAllJobNamesByFolder(job, result, newTabs);
                 }
             }
-        } catch (IOException e) {
+            return currentResult;
+        } catch (Exception e) {
             throw new JenkinsException("Error while accessing all jobs", e);
         }
+    }
+
+    private String getNameForJob(Job job, boolean isFolder) {
+        if (isFolder) {
+            return String.format("[F] %s", job.getName());
+        }
+        return String.format("%s", job.getName());
     }
 
     @Override
