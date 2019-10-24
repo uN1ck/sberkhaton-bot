@@ -3,8 +3,10 @@ package com.example.demo.jenkins.handlers;
 import com.example.demo.jenkins.provider.JenkinsProviderImpl;
 import com.example.demo.jenkins.subscriptions.CommonEventSubscription;
 import com.example.demo.jenkins.subscriptions.service.SubscriptionService;
+import com.offbytwo.jenkins.model.Build;
 import com.offbytwo.jenkins.model.BuildWithDetails;
 import com.offbytwo.jenkins.model.JobWithDetails;
+import com.offbytwo.jenkins.model.QueueReference;
 import im.dlg.botsdk.domain.Peer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +41,8 @@ public class JobHandler implements Handler {
                     return subscribeHandler(newTail, false, sender);
                 } else if (operator.equals(CommandList.SUB)) {
                     return subscribeHandler(newTail, true, sender);
+                } else if (operator.equals(CommandList.START_LAST)) {
+                    return startLastHandler(newTail, sender);
                 }
             }
         }
@@ -84,14 +88,31 @@ public class JobHandler implements Handler {
             if (subscribe) {
                 JobWithDetails job = jenkinsProvider.getJob(jobName).details();
                 subscriptionService.subscribe(sender, new CommonEventSubscription(job));
-                return "Подписка оформлена";
+                return String.format("Подписка на `%s` оформлена", jobName);
             } else {
                 subscriptionService.unsubscribe(sender, jobName);
-                return "Подписка прекрщена";
+                return String.format("Подписка на `%s` прекращена", jobName);
             }
-
         } catch (Exception e) {
+            log.error("Ошибка при запуске задачи", e);
             return "Не удалось изменить состояние подписки :(";
+        }
+    }
+
+    private String startLastHandler(String jobName, Peer sender) {
+        try {
+            JobWithDetails jobWithDetails = jenkinsProvider.getJob(jobName).details();
+            Build b = jobWithDetails.getLastBuild();
+            if (b.equals(Build.BUILD_HAS_NEVER_RUN)) {
+                return "Задача `%s` никогда не запускалась и не может быть перезапущена";
+            } else {
+                subscribeHandler(jobName, true, sender);
+                QueueReference q = jobWithDetails.build(jobWithDetails.getLastBuild().details().getParameters(), true);
+                return "Задача `%s` запущена успешно";
+            }
+        } catch (Exception e) {
+            log.error("Ошибка при запуске задачи", e);
+            return "Не удалось запустить :(";
         }
     }
 
