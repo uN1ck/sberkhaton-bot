@@ -15,7 +15,7 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class SubscriptionServiceImpl implements SubscriptionService {
-    private static final int REFRESH_RATE = 5000;
+    private static final int REFRESH_RATE = 2500;
     private final Map<Integer, PersonalSubscriptionService> subscriptions;
     private final BotProvider botProvider;
     private final JenkinsProvider jenkinsProvider;

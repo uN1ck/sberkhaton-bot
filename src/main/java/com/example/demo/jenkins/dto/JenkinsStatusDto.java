@@ -1,16 +1,18 @@
 package com.example.demo.jenkins.dto;
 
 import lombok.RequiredArgsConstructor;
-import lombok.ToString;
 
-@ToString
 @RequiredArgsConstructor
 public class JenkinsStatusDto {
     private final Status status;
     private final String version;
 
-    public static enum Status {
-        OK, FAIL
+    @Override
+    public String toString() {
+        return String.format("Состояние: %s Версия: %s", status, version);
     }
 
+    public enum Status {
+        OK, FAIL
+    }
 }

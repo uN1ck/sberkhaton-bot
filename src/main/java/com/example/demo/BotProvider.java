@@ -20,7 +20,7 @@ public class BotProvider {
             BotConfig botConfig = BotConfig.Builder.aBotConfig()
                     .withHost("hackathon-mob.transmit.im")
                     .withPort(443)
-                    .withToken("d33eadd7fa9460116631493b5076c2965d614443").build();
+                    .withToken("51236c31c453ecc2ad47836c1aa460bcc1585a9f").build();
             bot = Bot.start(botConfig).get();
         } catch (Exception e) {
             log.error("Ошика при создании бота", e);

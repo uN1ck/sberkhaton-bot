@@ -10,6 +10,6 @@ public class StatusHandler {
     private final JenkinsProvider jenkinsProvider;
 
     public String handle() {
-        return "Состояние " + jenkinsProvider.getStatus();
+        return jenkinsProvider.getStatus().toString();
     }
 }

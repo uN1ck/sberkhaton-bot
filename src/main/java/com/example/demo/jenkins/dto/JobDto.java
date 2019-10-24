@@ -22,7 +22,7 @@ public class JobDto {
     }
 
 
-    public static enum JobType {
+    public enum JobType {
         FOLDER, JOB
     }
 
