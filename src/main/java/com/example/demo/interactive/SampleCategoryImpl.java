@@ -40,8 +40,8 @@ public class SampleCategoryImpl implements Category {
     public List<Entity> listEntities(String pattern, String[] previous) {
         if(previous.length == 0)
             return ImmutableList.of(
-                    new Entity("folder", "Мой сервак", true),
-                    new Entity("srv2", "Не мой сервак", false)
+                    new Entity("folder", "Мой пездюк", true),
+                    new Entity("srv2", "Не мой пездюк", false)
             );
         
         if(previous.length == 1)
