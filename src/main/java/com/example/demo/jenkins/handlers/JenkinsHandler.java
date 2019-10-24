@@ -41,7 +41,7 @@ public class JenkinsHandler {
     }
 
     private String statusHandler() {
-        return "Состояние Jenkins " + jenkinsProvider.getStatus();
+        return "Состояние " + jenkinsProvider.getStatus();
     }
 
     private String listHandler(String tail) {
@@ -58,6 +58,7 @@ public class JenkinsHandler {
             return String.format("Jobs: \n%s", jenkinsProvider.getAllJobNames());
         }
     }
+
 
     private String jobHandler(String tail) {
         return "Not implemented yet";

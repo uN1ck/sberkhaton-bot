@@ -14,7 +14,6 @@ import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -139,7 +138,8 @@ public class JenkinsProviderImpl implements JenkinsProvider {
 
     @Override
     public JenkinsStatus getStatus() {
-        return jenkinsServer.isRunning() ? new JenkinsStatus(JenkinsStatus.Status.OK) :
-                new JenkinsStatus(JenkinsStatus.Status.FAIL);
+        return jenkinsServer.isRunning() ?
+                new JenkinsStatus(JenkinsStatus.Status.OK, jenkinsServer.getVersion().getLiteralVersion()) :
+                new JenkinsStatus(JenkinsStatus.Status.FAIL, jenkinsServer.getVersion().getLiteralVersion());
     }
 }
