@@ -3,6 +3,7 @@ package com.example.demo.interactive;
 import com.example.demo.RootHandler;
 import com.example.demo.interactive.action.ButtonAction;
 import com.example.demo.interactive.action.CategoryAction;
+import com.example.demo.interactive.input.PeerInputHandler;
 import com.example.demo.interactive.model.Button;
 import im.dlg.botsdk.domain.InteractiveEvent;
 import im.dlg.botsdk.domain.Message;
@@ -28,6 +29,8 @@ public class PeerHandler implements MessageListener, InteractiveEventListener {
     
     private final Map<Long, ButtonAction> actionsCache = new HashMap<>();
     private long actionsCounter = 0;
+    
+    private PeerInputHandler<String> activeTextRequest = null;
 
     @Override
     public void onMessage(Message message) {
@@ -35,6 +38,13 @@ public class PeerHandler implements MessageListener, InteractiveEventListener {
     }
 
     public void onMessage(String message) {
+        if(!message.startsWith("/")) {
+            activeTextRequest.accept(message);
+            activeTextRequest = null;
+            return;
+        }
+        activeTextRequest = null;
+        
         if(message.equals("/start")) {
             start();
             return;
@@ -106,6 +116,11 @@ public class PeerHandler implements MessageListener, InteractiveEventListener {
 
         InteractiveGroup group = new InteractiveGroup(actions);
         rootHandler.getBotProvider().getBot().interactiveApi().send(peer, group);
+    }
+    
+    public void requestText(String message, PeerInputHandler<String> handler) {
+        rootHandler.getBotProvider().getBot().messaging().sendText(peer, message);
+        activeTextRequest = handler;
     }
     
 }

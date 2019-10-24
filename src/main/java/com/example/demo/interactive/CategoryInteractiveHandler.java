@@ -22,9 +22,10 @@ public class CategoryInteractiveHandler {
             invoke((InvokeAction)action);
         } else if(action instanceof CategoryAction) {
             // Основное меню или избранное
-            renderMenu((CategoryAction)action);
+            renderMenu((CategoryAction) action);
+        } else if(action instanceof FilterRequestAction) {
+            requestFilter((FilterRequestAction)action);
         } else if(action instanceof ListAction) {
-            // Фильтры пока не поддерживаются
             renderEntities((ListAction)action);
         } else if(action instanceof EntityAction) {
             renderEntityActions((EntityAction)action);
@@ -44,7 +45,7 @@ public class CategoryInteractiveHandler {
         ));
         
         buttons.add(new Button(
-                new ListAction(category.getCommand(), "", ImmutableList.of()),
+                new FilterRequestAction(category.getCommand()),
                 category.getListButtonName() + " (фильтр)"
         ));
         
@@ -55,6 +56,13 @@ public class CategoryInteractiveHandler {
             ));
         
         this.peerHandler.renderButtons(buttons);
+    }
+    
+    private void requestFilter(FilterRequestAction parent) {
+        peerHandler.requestText(
+                "Введите фильтр для поиска", 
+                text -> handle(new ListAction(category.getCommand(), text, ImmutableList.of()))
+        );
     }
     
     private void renderEntities(ListAction parent) {
