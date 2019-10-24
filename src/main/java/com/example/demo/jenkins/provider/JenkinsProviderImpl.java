@@ -27,7 +27,7 @@ public class JenkinsProviderImpl implements JenkinsProvider {
     private void init() {
         try {
             //TODO: Скрыть креды?
-            jenkinsServer = new JenkinsServer(new URI("http://localhost:8080"), "admin", "passme");
+            jenkinsServer = new JenkinsServer(new URI("http://172.30.18.91:8080"), "admin", "passme");
 
         } catch (URISyntaxException e) {
             e.printStackTrace();
