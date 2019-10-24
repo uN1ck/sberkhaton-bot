@@ -44,6 +44,11 @@ public class SampleCategoryImpl implements Category {
                     new Entity("srv2", "Не мой сервак", false)
             );
         
+        if(previous.length == 1)
+            return ImmutableList.of(
+                    new Entity("sub", "Некст левел", true)
+            );
+        
         return ImmutableList.of(
                 new Entity("kek1", "В подпапке", false),
                 new Entity("kek2", "Ещё сервер", false),
@@ -58,6 +63,20 @@ public class SampleCategoryImpl implements Category {
                 new Action("/sample server %s options", "Опции"),
                 new Action("/sample server %s shutdown", "Выключить")
         );
+    }
+    
+    public String onMessage(PeerHandler peerHandler, String message) {
+        List<Entity> entities = ImmutableList.of(
+                new Entity("A", "-A-"),
+                new Entity("B", "-B-"),
+                new Entity("C", "-C-")
+        );
+        
+        peerHandler.requestSelect("Сделай свой выбор", entities, identifier -> {
+            peerHandler.sendMessage("You selected " + identifier);
+        });
+        
+        return PeerHandler.DELAYED_COMMAND;
     }
 
 }
