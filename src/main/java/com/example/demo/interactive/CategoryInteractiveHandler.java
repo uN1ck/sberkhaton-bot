@@ -16,6 +16,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CategoryInteractiveHandler {
     
+    private static final String ARROW_DELIMITER = " → ";
+    
     private final PeerHandler peerHandler;
     private final Category category;
     
@@ -77,7 +79,7 @@ public class CategoryInteractiveHandler {
             }
             
             buttons.add(new Button(menu, "..."));
-            this.peerHandler.renderButtons(parent, category.getCommandName(), buttons);
+            this.peerHandler.renderButtons(parent, category.getCommandName() + ARROW_DELIMITER + "Избранное", buttons);
         }
     }
     
@@ -160,8 +162,9 @@ public class CategoryInteractiveHandler {
     private String path(List<String> path) {
         List<String> list = new ArrayList<>();
         list.add(category.getCommandName());
+        list.add(category.getListButtonName());
         list.addAll(path);
-        return Joiner.on(" → ").join(list);
+        return Joiner.on(ARROW_DELIMITER).join(list);
     }
     
     private void favourite(EntityAction action) {
