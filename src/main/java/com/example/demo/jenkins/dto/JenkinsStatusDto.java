@@ -1,11 +1,11 @@
-package com.example.demo.jenkins.provider;
+package com.example.demo.jenkins.dto;
 
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 
 @ToString
 @RequiredArgsConstructor
-public class JenkinsStatus {
+public class JenkinsStatusDto {
     private final Status status;
     private final String version;
 

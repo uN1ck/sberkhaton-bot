@@ -1,19 +1,17 @@
 package com.example.demo.jenkins;
 
-import com.example.demo.jenkins.provider.JenkinsStatus;
+import com.example.demo.jenkins.dto.JenkinsStatusDto;
 import com.offbytwo.jenkins.model.Job;
 
 import java.util.List;
 
 public interface JenkinsProvider {
 
-    String getAllJobNames();
+    List<String> getAllJobNames();
 
-    List<Job> getAllJobs();
-
-    List<Job> getFilteredJobs(String criteria);
+    List<String> getFilteredJobs(String criteria);
 
     Job getJob(String jobIdentifier);
 
-    JenkinsStatus getStatus();
+    JenkinsStatusDto getStatus();
 }
