@@ -3,6 +3,7 @@ package com.example.demo;
 import com.example.demo.interactive.Category;
 import com.example.demo.interactive.PeerHandler;
 import com.example.demo.interactive.SampleCategoryImpl;
+import com.example.demo.interactive.StashCategory;
 import com.example.demo.jenkins.handlers.JenkinsHandler;
 import com.example.demo.stash.handler.StashHandler;
 import im.dlg.botsdk.domain.InteractiveEvent;
@@ -25,15 +26,16 @@ import java.util.Map;
 @Getter
 @RequiredArgsConstructor
 public class RootHandler implements MessageListener, InteractiveEventListener {
-    
+
     private final BotProvider botProvider;
     private final List<Category> categories;
 
     private final JenkinsHandler jenkinsHandler;
     private final StashHandler stashHandler;
-    
+
     private final SampleCategoryImpl sample;
-    
+    private final StashCategory stashCategory;
+
     private final Map<Integer, PeerHandler> peerHandlers = new HashMap<>();
 
     @PostConstruct
@@ -59,7 +61,7 @@ public class RootHandler implements MessageListener, InteractiveEventListener {
             log.error("Error during interactive event processing", e);
         }
     }
-    
+
     private PeerHandler getPeerHandler(Peer peer) {
         return peerHandlers.computeIfAbsent(peer.getId(), p -> new PeerHandler(this, peer));
     }

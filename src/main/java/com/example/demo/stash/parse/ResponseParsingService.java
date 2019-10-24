@@ -1,5 +1,7 @@
 package com.example.demo.stash.parse;
 
+import com.example.demo.stash.dto.PullRequest;
+import com.example.demo.stash.dto.PullRequestShorten;
 import com.example.demo.stash.dto.StashProject;
 import com.example.demo.stash.dto.StashRepository;
 import com.example.demo.stash.exceptions.StashResponseParsingException;
@@ -8,9 +10,13 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -19,7 +25,7 @@ public class ResponseParsingService {
     private static final String ERR_MESSAGE = "Ошибка при парсинге ответа от Stash. Обратитесь к администратору";
 
     @NonNull
-    public List<StashProject> listAllProjects(String jsonResponse) throws StashResponseParsingException {
+    public List<StashProject> listAllProjects(String jsonResponse) {
         try {
             return innerListAllProjects(jsonResponse);
         } catch (Exception e) {
@@ -38,7 +44,22 @@ public class ResponseParsingService {
     }
 
     @NonNull
-    public List<StashRepository> listRepositories(String jsonResponse) throws StashResponseParsingException {
+    public Optional<StashProject> getProject(String jsonResponse) {
+        try {
+            return Optional.of(innerStashProject(jsonResponse));
+        } catch (Exception e) {
+            return Optional.empty();
+        }
+    }
+
+    private StashProject innerStashProject(String jsonResponse) {
+        Objects.requireNonNull(jsonResponse);
+        Map<String, Object> map = Json.deserializeToMap(jsonResponse);
+        return new StashProject((String) map.get("key"), (String) map.get("name"));
+    }
+
+    @NonNull
+    public List<StashRepository> listRepositories(String jsonResponse) {
         try {
             return innerListRepositories(jsonResponse);
         } catch (Exception e) {
@@ -59,5 +80,108 @@ public class ResponseParsingService {
                         .state((String) m.get("statusMessage"))
                         .build())
                 .collect(Collectors.toList());
+    }
+
+    @NonNull
+    public Optional<StashRepository> getRepository(String jsonResponse) {
+        try {
+            return Optional.of(innerGetRepository(jsonResponse));
+        }
+        catch (Exception e) {
+            return Optional.empty();
+        }
+    }
+
+    private StashRepository innerGetRepository(String jsonResponse) {
+        Objects.requireNonNull(jsonResponse);
+        Map<String, Object> map = Json.deserializeToMap(jsonResponse);
+        return StashRepository.builder()
+                .isForkable((boolean) map.get("forkable"))
+                .isPublic((boolean) map.get("public"))
+                .name((String) map.get("slug"))
+                .state((String) map.get("statusMessage"))
+                .build();
+    }
+
+    @NonNull
+    public List<PullRequestShorten> listPullRequests(String jsonResponse) {
+        try {
+            return innerListPullRequests(jsonResponse);
+        } catch (Exception e) {
+            log.error(ERR_MESSAGE, e);
+            throw new StashResponseParsingException(ERR_MESSAGE);
+        }
+    }
+
+    private List<PullRequestShorten> innerListPullRequests(String jsonResponse) {
+        Objects.requireNonNull(jsonResponse);
+        Map<String, Object> map = Json.deserializeToMap(jsonResponse);
+        List<Map<String, Object>> values = (List<Map<String, Object>>) map.get("values");
+        return values.stream()
+                .map(m -> PullRequestShorten.builder()
+                        .title((String) m.get("title"))
+                        .id(Long.parseLong(m.get("id").toString()))
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    @NonNull
+    public PullRequest getPullRequest(String jsonResponse) {
+        try {
+            return innerGetPullRequest(jsonResponse);
+        } catch (Exception e) {
+            log.error(ERR_MESSAGE, e);
+            throw new StashResponseParsingException(ERR_MESSAGE);
+        }
+    }
+
+    private PullRequest innerGetPullRequest(String jsonResponse) {
+        Objects.requireNonNull(jsonResponse);
+        Map<String, Object> map = Json.deserializeToMap(jsonResponse);
+        Map<String, Object> author = ((Map<String, Map>) map.get("author")).get("user");
+        Map<String, Object> fromRef = (Map<String, Object>) map.get("fromRef");
+        Map<String, Object> toRef = (Map<String, Object>) map.get("toRef");
+
+        return PullRequest.builder()
+                .version((Integer) map.get("version"))
+                .authorDisplayName((String) author.get("displayName"))
+                .authorEmail((String) author.get("emailAddress"))
+                .creationDate(LocalDateTime.ofInstant(Instant.ofEpochMilli(
+                        Long.parseLong(map.get("createdDate").toString())
+                ), ZoneId.systemDefault()))
+                .updatedDate(LocalDateTime.ofInstant(Instant.ofEpochMilli(
+                        Long.parseLong(map.get("updatedDate").toString())
+                ), ZoneId.systemDefault()))
+                .title((String) map.get("title"))
+                .id(Long.parseLong(map.get("id").toString()))
+                .fromBranch((String) fromRef.get("displayId"))
+                .toBranch((String) toRef.get("displayId"))
+                .build();
+    }
+
+    @NonNull
+    public String mergePullRequest(String jsonResponse) {
+        Objects.requireNonNull(jsonResponse);
+        Map<String, Object> map = Json.deserializeToMap(jsonResponse);
+        if (map != null && map.get("errors") != null) {
+            List<Map<String, Object>> errors = (List<Map<String, Object>>) map.get("errors");
+            return "Ошибка при вливании PR: " + errors.stream()
+                    .map(m -> (String) m.get("message"))
+                    .collect(Collectors.joining("; "));
+        }
+        return "PR был успешно влит";
+    }
+
+    @NonNull
+    public String deletePullRequest(String jsonResponse) {
+        Objects.requireNonNull(jsonResponse);
+        Map<String, Object> map = Json.deserializeToMap(jsonResponse);
+        if (map != null && map.get("errors") != null) {
+            List<Map<String, Object>> errors = (List<Map<String, Object>>) map.get("errors");
+            return "Ошибка при удалении PR: " + errors.stream()
+                    .map(m -> (String) m.get("message"))
+                    .collect(Collectors.joining("; "));
+        }
+        return "PR был успешно удален";
     }
 }
