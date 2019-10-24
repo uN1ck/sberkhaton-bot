@@ -59,5 +59,19 @@ public class SampleCategoryImpl implements Category {
                 new Action("/sample server %s shutdown", "Выключить")
         );
     }
+    
+    public String onMessage(PeerHandler peerHandler, String message) {
+        List<Entity> entities = ImmutableList.of(
+                new Entity("A", "-A-"),
+                new Entity("B", "-B-"),
+                new Entity("C", "-C-")
+        );
+        
+        peerHandler.requestSelect(entities, identifier -> {
+            peerHandler.sendMessage("You selected " + identifier);
+        });
+        
+        return PeerHandler.DELAYED_COMMAND;
+    }
 
 }

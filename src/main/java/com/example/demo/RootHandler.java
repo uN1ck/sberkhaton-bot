@@ -2,6 +2,7 @@ package com.example.demo;
 
 import com.example.demo.interactive.Category;
 import com.example.demo.interactive.PeerHandler;
+import com.example.demo.interactive.SampleCategoryImpl;
 import com.example.demo.jenkins.handlers.JenkinsHandler;
 import com.example.demo.stash.handler.StashHandler;
 import im.dlg.botsdk.domain.InteractiveEvent;
@@ -30,6 +31,8 @@ public class RootHandler implements MessageListener, InteractiveEventListener {
 
     private final JenkinsHandler jenkinsHandler;
     private final StashHandler stashHandler;
+    
+    private final SampleCategoryImpl sample;
     
     private final Map<Integer, PeerHandler> peerHandlers = new HashMap<>();
 

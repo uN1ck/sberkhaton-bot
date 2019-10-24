@@ -5,6 +5,7 @@ import com.example.demo.interactive.action.ButtonAction;
 import com.example.demo.interactive.action.CategoryAction;
 import com.example.demo.interactive.input.PeerInputHandler;
 import com.example.demo.interactive.model.Button;
+import com.example.demo.interactive.model.Entity;
 import im.dlg.botsdk.domain.InteractiveEvent;
 import im.dlg.botsdk.domain.Message;
 import im.dlg.botsdk.domain.Peer;
@@ -21,16 +22,20 @@ import java.util.*;
 @Slf4j
 @RequiredArgsConstructor
 public class PeerHandler implements MessageListener, InteractiveEventListener {
+    
+    public static final String DELAYED_COMMAND = "~DELAYED~";
 
     private final RootHandler rootHandler;
     private final Peer peer;
     
     private final Map<String, CategoryInteractiveHandler> handlers = new HashMap<>();
     
-    private final Map<Long, ButtonAction> actionsCache = new HashMap<>();
-    private long actionsCounter = 0;
+    private final Map<UUID, ButtonAction> actionsCache = new HashMap<>();
     
-    private PeerInputHandler<String> activeTextRequest = null;
+    private PeerInputHandler activeTextRequest = null;
+    
+    private PeerInputHandler activeSelectHandler = null;
+    private String activeSelectIdentifier = null;
 
     @Override
     public void onMessage(Message message) {
@@ -51,16 +56,20 @@ public class PeerHandler implements MessageListener, InteractiveEventListener {
         }
 
         String response = null;
-        if (message.matches("^/jobs.*")) {
+        if(message.startsWith("/sample")) {
+            response = rootHandler.getSample().onMessage(this, message);
+        } else if (message.matches("^/jobs.*")) {
             response = rootHandler.getJenkinsHandler().onMessage(peer, message);
         } else if (message.matches("^/stash.*")) {
             response = rootHandler.getStashHandler().onMessage(peer, message);
         }
 
-        rootHandler.getBotProvider().getBot().messaging().sendText(
-                peer,
-                Optional.ofNullable(response).orElse("Нет такой команды :) " + message)
-        );
+        if(response == null || !response.equals(DELAYED_COMMAND)) {
+            rootHandler.getBotProvider().getBot().messaging().sendText(
+                    peer,
+                    Optional.ofNullable(response).orElse("Нет такой команды :) " + message)
+            );
+        }
     }
     
     public void start() {
@@ -73,10 +82,19 @@ public class PeerHandler implements MessageListener, InteractiveEventListener {
     
     @Override
     public void onEvent(InteractiveEvent event) {
-        long id = Long.parseLong(event.getValue());
-        log.info("Received action {}", id);
+        if(event.getId().startsWith("request_")) {
+            if(activeSelectHandler != null && event.getId().startsWith(activeSelectIdentifier)) {
+                activeSelectHandler.accept(event.getValue());
+                activeSelectHandler = null;
+            }
+            return;
+        }
+        activeSelectHandler = null;
+        
+        UUID uuid = UUID.fromString(event.getValue());
+        log.info("Received action {}", uuid);
 
-        ButtonAction action = actionsCache.get(id);
+        ButtonAction action = actionsCache.get(uuid);
         if(action != null) {
             CategoryInteractiveHandler handler = handlers.computeIfAbsent(action.getOwner(), a -> {
                 Category category = rootHandler.getCategories()
@@ -99,18 +117,14 @@ public class PeerHandler implements MessageListener, InteractiveEventListener {
         List<InteractiveAction> actions = new ArrayList<>();
         
         for(Button button : buttons) {
-            long id;
-            synchronized(actionsCache) {
-                id = actionsCounter;
-                actionsCounter++;
-                actionsCache.put(id, button.getAction());
-            }
+            UUID uuid = UUID.randomUUID();
+            actionsCache.put(uuid, button.getAction());
             
-            log.info("Stored action {} {}", id, button.getAction());
+            log.info("Stored action {} {}", uuid, button.getAction());
             
             actions.add(new InteractiveAction(
-                    "bt_" + id, 
-                    new InteractiveButton(Long.toString(id), button.getDisplayName())
+                    "action_" + uuid, 
+                    new InteractiveButton(uuid.toString(), button.getDisplayName())
             ));
         }
 
@@ -118,9 +132,32 @@ public class PeerHandler implements MessageListener, InteractiveEventListener {
         rootHandler.getBotProvider().getBot().interactiveApi().send(peer, group);
     }
     
-    public void requestText(String message, PeerInputHandler<String> handler) {
+    public void requestText(String message, PeerInputHandler handler) {
         rootHandler.getBotProvider().getBot().messaging().sendText(peer, message);
         activeTextRequest = handler;
+    }
+    
+    public void requestSelect(List<Entity> entities, PeerInputHandler handler) {
+        activeSelectHandler = handler;
+        activeSelectIdentifier = "request_" + UUID.randomUUID();
+        
+        List<InteractiveAction> actions = new ArrayList<>();
+        int counter = 0;
+        
+        for(Entity button : entities) {
+            actions.add(new InteractiveAction(
+                    activeSelectIdentifier + counter,
+                    new InteractiveButton(button.getIdentifier(), button.getDisplayName())
+            ));
+            counter++;
+        }
+
+        InteractiveGroup group = new InteractiveGroup(actions);
+        rootHandler.getBotProvider().getBot().interactiveApi().send(peer, group);
+    }
+    
+    public void sendMessage(String message) {
+        rootHandler.getBotProvider().getBot().messaging().sendText(peer, message);
     }
     
 }
