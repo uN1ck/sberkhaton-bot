@@ -7,12 +7,14 @@ import com.example.demo.jenkins.JenkinsProvider;
 import com.example.demo.jenkins.subscriptions.CommonEventSubscription;
 import com.example.demo.jenkins.subscriptions.service.SubscriptionService;
 import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.SettableFuture;
 import com.offbytwo.jenkins.model.Build;
 import com.offbytwo.jenkins.model.BuildWithDetails;
 import com.offbytwo.jenkins.model.JobWithDetails;
 import com.offbytwo.jenkins.model.QueueReference;
 import im.dlg.botsdk.domain.Peer;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -20,9 +22,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -156,23 +157,84 @@ public class JobHandler {
 
     }
 
+    private String startByAllArgsHandler(String jobName, String allArgs, Peer sender) {
+        return startHandler(jobName, parseParameters(allArgs), sender);
+    }
+
+    private String startHandler(String jobName, Map<String, String> args, Peer sender) {
+        try {
+            subscribeHandler(jobName, sender);
+            jenkinsProvider.getJob(jobName).build(args, true);
+            return String.format("Задача `%s` запущена успешно", jobName);
+        } catch (Exception e) {
+            String errorString = String.format("Не удалось запустить job `%s` со списком аргументов `%s` :(",
+                                               jobName,
+                                               args);
+            log.error(errorString, e);
+            return errorString;
+        }
+    }
+
+    private Map<String, String> parseParameters(String params) {
+        return Arrays.stream(params.split("\n"))
+                     .map(s -> s.split(":"))
+                     .collect(Collectors.toMap(o -> o[0], o -> o[1]));
+    }
+
+    private String startByParameterRequest(String jobName, PeerHandler peerHandler) {
+        try {
+            Map<String, String> args = jenkinsProvider.getJob(jobName)
+                                                      .details()
+                                                      .getLastBuild()
+                                                      .details()
+                                                      .getParameters();
+            Thread t = new Thread(() -> {
+                for (String argKey : args.keySet()) {
+                    args.put(argKey, requireTextSyncronized(peerHandler, argKey));
+                }
+                peerHandler.sendMessage(startHandler(jobName, args, peerHandler.getPeer()));
+            });
+            t.start();
+            return PeerHandler.DELAYED_COMMAND;
+        } catch (Exception e) {
+            String errorString = String.format("Не удалось запустить job `%s` с подсказкой аргументов :(", jobName);
+            log.error(errorString, e);
+            return errorString;
+        }
+    }
 
     private String startHandler(String jobName, PeerHandler peerHandler) {
         try {
             jenkinsProvider.getJob(jobName).details();
             List<Entity> entities = ImmutableList.of(
+                    new Entity("no args", "Без аргументов"),
                     new Entity("args", "Ручной ввод"),
                     new Entity("args auto", "Запрашивать")
             );
             peerHandler.requestSelect("Выбеорите процесс запуска",
                                       entities,
                                       identifier -> {
-                                          if (identifier.equals("args")) {
+                                          if (identifier.equals("no args")) {
+                                              peerHandler.sendMessage(startHandler(jobName,
+                                                                                   Collections.emptyMap(),
+                                                                                   peerHandler.getPeer()));
+                                          } else if (identifier.equals("args")) {
+                                              peerHandler.requestText("Введите аргументы запуска <имя:значение>",
+                                                                      input -> {
+                                                                          String result =
+                                                                                  startByAllArgsHandler(jobName,
+                                                                                                        input,
+                                                                                                        peerHandler.getPeer());
+                                                                          peerHandler.sendMessage(result);
 
+                                                                      });
                                           } else if (identifier.equals("args auto")) {
-
+                                              String s = startByParameterRequest(jobName, peerHandler);
+                                              if (!s.equals(PeerHandler.DELAYED_COMMAND))
+                                                  peerHandler.sendMessage(s);
                                           } else {
-                                              peerHandler.sendMessage("А как ты вообще сюда попал? Оо " + identifier);
+                                              peerHandler.sendMessage(
+                                                      "А как ты вообще сюда попал? Оо " + identifier);
                                           }
                                       });
 
@@ -184,4 +246,11 @@ public class JobHandler {
         }
     }
 
+    @SneakyThrows
+    public String requireTextSyncronized(PeerHandler peerHandler, String arg) {
+        SettableFuture<String> stringSettableFuture = SettableFuture.create();
+        peerHandler.requestText(String.format("Введите значение аргумента %s", arg),
+                                s -> stringSettableFuture.set(s));
+        return stringSettableFuture.get();
+    }
 }
