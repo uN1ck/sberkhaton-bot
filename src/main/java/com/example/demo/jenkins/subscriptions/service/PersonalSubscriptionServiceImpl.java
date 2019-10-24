@@ -23,16 +23,15 @@ public class PersonalSubscriptionServiceImpl implements PersonalSubscriptionServ
     @Override
     public void refreshSubscriptions() {
         subscriptions.forEach(subscription -> {
-            //Мб лучше запрашивать все джобы на момент старта апдейта?
             Job subscribedJob = jenkinsProvider.getJob(subscription.getJobIdentifier());
             subscription.onEvent(subscribedJob, botProvider, owner);
         });
     }
 
-
     @Override
     public void subscribe(Subscription subscription) {
-        subscriptions.add(subscription);
+        if (subscriptions.stream().noneMatch(sub -> sub.getJobIdentifier().equals(subscription.getJobIdentifier())))
+            subscriptions.add(subscription);
     }
 
     @Override
