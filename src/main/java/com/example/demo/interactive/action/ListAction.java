@@ -28,14 +28,14 @@ public class ListAction implements ButtonAction {
         this(previous, owner, filter, ImmutableList.of(), ImmutableList.of());
     }
     
-    public ListAction getChild(Entity child) {
+    public ListAction getChild(ButtonAction prev, Entity child) {
         List<String> newPath = new ArrayList<>(path);
         newPath.add(child.getIdentifier());
         
         List<String> newDisplayPath = new ArrayList<>(displayPath);
         newDisplayPath.add(child.getDisplayName());
         
-        return new ListAction(this, owner, filter, newPath, newDisplayPath);
+        return new ListAction(prev, owner, filter, newPath, newDisplayPath);
     }
 
 }

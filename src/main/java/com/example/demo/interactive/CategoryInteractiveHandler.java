@@ -67,7 +67,7 @@ public class CategoryInteractiveHandler {
         MenuAction menu = new MenuAction(parent.getPrevious(), category.getCommand());
         
         if(favourites.size() == 0) {
-            renderMenu(menu);
+            handle(menu);
         } else {
             List<Button> buttons = new ArrayList<>();
             
@@ -115,27 +115,29 @@ public class CategoryInteractiveHandler {
     private void renderEntities(ListAction parent) {
         List<Entity> entities = category.listEntities(parent.getFilter(), parent.getPath().toArray(new String[0]));
         
-        this.peerHandler.renderButtons(
-                parent,
-                path(parent.getDisplayPath()),
-                entities.stream()
-                        .map(entity -> {
-                            ButtonAction action;
-                            if(entity.isFolder()) {
-                                action = parent.getChild(entity);
-                            } else {
-                                List<String> path = new ArrayList<>(parent.getDisplayPath());
-                                path.add(entity.getDisplayName());
-                                
-                                action = new EntityAction(parent, category.getCommand(), entity.getIdentifier(), path);
-                            }
-                            
-                            return new Button(
-                                action,
-                                entity.getDisplayNameWithIcon());
-                        })
-                        .collect(Collectors.toList())
-        );
+        if(entities.size() != 1) {
+            List<Button> buttons = entities.stream()
+                                           .map(entity -> createButton(parent, parent, entity))
+                                           .collect(Collectors.toList());
+        
+            this.peerHandler.renderButtons(parent, path(parent.getDisplayPath()), buttons);
+        } else {
+            this.handle(createButton(parent, parent.getPrevious(), entities.get(0)).getAction());
+        }
+    }
+    
+    private Button createButton(ListAction parent, ButtonAction prev, Entity entity) {
+        ButtonAction action;
+        if(entity.isFolder()) {
+            action = parent.getChild(prev, entity);
+        } else {
+            List<String> path = new ArrayList<>(parent.getDisplayPath());
+            path.add(entity.getDisplayName());
+
+            action = new EntityAction(prev, category.getCommand(), entity.getIdentifier(), path);
+        }
+
+        return new Button(action, entity.getDisplayNameWithIcon());
     }
     
     private void renderEntityActions(EntityAction parent) {
