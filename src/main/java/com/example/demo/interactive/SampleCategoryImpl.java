@@ -37,10 +37,17 @@ public class SampleCategoryImpl implements Category {
     }
 
     @Override
-    public List<Entity> listEntities(String pattern) {
+    public List<Entity> listEntities(String pattern, String[] previous) {
+        if(previous.length == 0)
+            return ImmutableList.of(
+                    new Entity("folder", "Мой сервак", true),
+                    new Entity("srv2", "Не мой сервак", false)
+            );
+        
         return ImmutableList.of(
-                new Entity("srv1", "Мой сервак"),
-                new Entity("srv2", "Не мой сервак")
+                new Entity("kek1", "В подпапке", false),
+                new Entity("kek2", "Ещё сервер", false),
+                new Entity("kek3", "Ну и ещё один", false)
         );
     }
 

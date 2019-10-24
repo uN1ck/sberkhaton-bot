@@ -1,8 +1,10 @@
 package com.example.demo.interactive;
 
+import com.example.demo.interactive.action.*;
 import com.example.demo.interactive.model.Action;
 import com.example.demo.interactive.model.Button;
 import com.example.demo.interactive.model.Entity;
+import com.google.common.collect.ImmutableList;
 import im.dlg.botsdk.domain.Peer;
 import lombok.RequiredArgsConstructor;
 
@@ -13,23 +15,21 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CategoryInteractiveHandler {
     
-    private static final String LIST_ACTION = "list";
-    private static final String LIST_FILTER_ACTION = "list-filter";
-    private static final String ENTITY_ACTION = "entity";
-    
     private final Interactive interactive;
     private final Category category;
     
-    public void handle(Peer peer, String[] cmd) {
-        if(cmd.length == 0) {
+    public void handle(Peer peer, ButtonAction action) {
+        if(action instanceof InvokeAction) {
+            interactive.getRootHandler().onMessage(peer, ((InvokeAction) action).getCommand());
+        } else if(action instanceof CategoryAction) {
             // Основное меню или избранное
             renderMenu(peer);
-        } else if(cmd[0].equals(LIST_ACTION) || cmd[0].equals(LIST_FILTER_ACTION)) {
-            // Пока фильтры не работают
-            renderEntities(peer, category.listEntities(""));
-        } else if(cmd[0].equals(ENTITY_ACTION)) {
-            String identifier = cmd[1];
-            renderEntityActions(peer, identifier);
+        } else if(action instanceof ListAction) {
+            // Фильтры пока не поддерживаются
+            ListAction la = (ListAction)action; 
+            renderEntities(peer, la, category.listEntities(la.getFilter(), la.getPath().toArray(new String[0])));
+        } else if(action instanceof EntityAction) {
+            renderEntityActions(peer, ((EntityAction) action).getIdentifier());
         }
     }
     
@@ -37,32 +37,37 @@ public class CategoryInteractiveHandler {
         List<Button> buttons = new ArrayList<>();
         
         buttons.add(new Button(
-                category.getListButtonName(),
-                category.getCommand(), LIST_ACTION
+                new ListAction(category.getCommand(), "", ImmutableList.of()),
+                category.getListButtonName()
         ));
         
         buttons.add(new Button(
-                category.getListButtonName() + " (фильтр)",
-                category.getCommand(), LIST_FILTER_ACTION
+                new ListAction(category.getCommand(), "", ImmutableList.of()),
+                category.getListButtonName() + " (фильтр)"
         ));
         
         for(Action action : category.getMainMenuCommands())
             buttons.add(new Button(
-                    action.getDisplayName(),
-                    Interactive.INVOKE_ACTION, action.getCommand()
+                    new InvokeAction(category.getCommand(), action.getCommand()),
+                    action.getDisplayName()
             ));
         
         interactive.renderButtons(peer, buttons);
     }
     
-    private void renderEntities(Peer peer, List<Entity> entities) {
+    private void renderEntities(Peer peer, ListAction parent, List<Entity> entities) {
         interactive.renderButtons(
                 peer, 
                 entities.stream()
-                        .map(entity -> new Button(
-                                entity.getDisplayName(), 
-                                category.getCommand(), ENTITY_ACTION, entity.getIdentifier()
-                        ))
+                        .map(entity -> {
+                            ButtonAction action = new EntityAction(category.getCommand(), entity.getIdentifier());
+                            if(entity.isFolder())
+                                action = parent.getChild(entity.getIdentifier());
+                            
+                            return new Button(
+                                action,
+                                entity.getDisplayNameWithIcon());
+                        })
                         .collect(Collectors.toList())
         );
     }
@@ -73,8 +78,8 @@ public class CategoryInteractiveHandler {
                 category.getEntityCommands()
                         .stream()
                         .map(action -> new Button(
-                                action.getDisplayName(), 
-                                Interactive.INVOKE_ACTION, String.format(action.getCommand(), identifier)
+                                new InvokeAction(category.getCommand(), String.format(action.getCommand(), identifier)),
+                                action.getDisplayName() 
                         ))
                         .collect(Collectors.toList())
         );

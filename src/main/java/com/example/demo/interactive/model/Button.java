@@ -1,18 +1,14 @@
 package com.example.demo.interactive.model;
 
-import lombok.AccessLevel;
+import com.example.demo.interactive.action.ButtonAction;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @Getter
-@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
+@RequiredArgsConstructor
 public class Button {
 
-    private final String[] value;
+    private final ButtonAction action;
     private final String displayName;
-    
-    public Button(String displayName, String... cmd) {
-        this(cmd, displayName);
-    }
 
 }
