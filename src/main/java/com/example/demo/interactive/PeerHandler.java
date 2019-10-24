@@ -141,7 +141,7 @@ public class PeerHandler implements MessageListener, InteractiveEventListener {
         activeTextRequest = handler;
     }
     
-    public void requestSelect(List<Entity> entities, PeerInputHandler handler) {
+    public void requestSelect(String message, List<Entity> entities, PeerInputHandler handler) {
         activeSelectHandler = handler;
         activeSelectIdentifier = "request_" + UUID.randomUUID();
         
@@ -156,7 +156,7 @@ public class PeerHandler implements MessageListener, InteractiveEventListener {
             counter++;
         }
 
-        InteractiveGroup group = new InteractiveGroup(actions);
+        InteractiveGroup group = new InteractiveGroup(null, message, actions);
         rootHandler.getBotProvider().getBot().interactiveApi().send(peer, group);
     }
     

@@ -72,7 +72,7 @@ public class SampleCategoryImpl implements Category {
                 new Entity("C", "-C-")
         );
         
-        peerHandler.requestSelect(entities, identifier -> {
+        peerHandler.requestSelect("Сделай свой выбор", entities, identifier -> {
             peerHandler.sendMessage("You selected " + identifier);
         });
         
