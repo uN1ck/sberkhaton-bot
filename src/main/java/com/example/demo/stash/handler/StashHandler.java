@@ -8,6 +8,8 @@ import im.dlg.botsdk.domain.Message;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
+
 @Service
 @RequiredArgsConstructor
 public class StashHandler {
@@ -22,6 +24,10 @@ public class StashHandler {
     }
 
     private String onMessageInner(Message message) throws StashResponseParsingException, StashConnectionException {
+        if(message.getText().trim().equals("/stash")) {
+            return Pretty.toString(Arrays.asList("list projects", "list repos <project-key>"));
+        }
+
         String tail = message.getText().replace("/stash", "").trim();
         if (tail.matches("^list.*")) {
             String listTail = tail.replace("list", "").trim();
