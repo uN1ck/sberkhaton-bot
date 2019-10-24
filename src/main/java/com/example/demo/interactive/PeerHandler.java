@@ -2,7 +2,6 @@ package com.example.demo.interactive;
 
 import com.example.demo.RootHandler;
 import com.example.demo.interactive.action.ButtonAction;
-import com.example.demo.interactive.action.CategoryAction;
 import com.example.demo.interactive.action.StartAction;
 import com.example.demo.interactive.input.PeerInputHandler;
 import com.example.demo.interactive.model.Button;
@@ -113,6 +112,7 @@ public class PeerHandler implements MessageListener, InteractiveEventListener {
         }
     }
     
+    @Deprecated
     protected void renderButtons(ButtonAction action, List<Button> buttons) {
         renderButtons(action, null, buttons);
     }

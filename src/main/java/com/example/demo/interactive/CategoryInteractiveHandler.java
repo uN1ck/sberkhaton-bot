@@ -35,13 +35,17 @@ public class CategoryInteractiveHandler {
     }
     
     private void start(StartAction action) {
-        this.peerHandler.renderButtons(action, peerHandler.getRootHandler()
-                                                          .getCategories()
-                                                          .stream()
-                                                          .map(cat -> new Button(new CategoryAction(
-                                                                  action, cat.getCommand()), cat.getCommandName()
-                                                          ))
-                                                          .collect(Collectors.toList()));
+        this.peerHandler.renderButtons(
+                action, 
+                "Выберите раздел",
+                peerHandler.getRootHandler()
+                           .getCategories()
+                           .stream()
+                           .map(cat -> new Button(new CategoryAction(
+                                   action, cat.getCommand()), cat.getCommandName()
+                           ))
+                           .collect(Collectors.toList())
+        );
     }
     
     private void invoke(InvokeAction parent) {
@@ -67,7 +71,7 @@ public class CategoryInteractiveHandler {
                     cmd.getDisplayName()
             ));
         
-        this.peerHandler.renderButtons(parent, buttons);
+        this.peerHandler.renderButtons(parent, category.getCommandName(), buttons);
     }
     
     private void requestFilter(FilterRequestAction parent) {
@@ -82,14 +86,17 @@ public class CategoryInteractiveHandler {
         
         this.peerHandler.renderButtons(
                 parent,
-                Joiner.on(" → ").join(parent.getDisplayPath()),
+                path(parent.getDisplayPath()),
                 entities.stream()
                         .map(entity -> {
                             ButtonAction action;
                             if(entity.isFolder()) {
                                 action = parent.getChild(entity);
                             } else {
-                                action = new EntityAction(parent, category.getCommand(), entity.getIdentifier());
+                                List<String> path = new ArrayList<>(parent.getDisplayPath());
+                                path.add(entity.getDisplayName());
+                                
+                                action = new EntityAction(parent, category.getCommand(), entity.getIdentifier(), path);
                             }
                             
                             return new Button(
@@ -103,6 +110,7 @@ public class CategoryInteractiveHandler {
     private void renderEntityActions(EntityAction parent) {
         this.peerHandler.renderButtons(
                 parent,
+                path(parent.getDisplayPath()),
                 category.getEntityCommands()
                         .stream()
                         .map(action -> new Button(
@@ -114,6 +122,13 @@ public class CategoryInteractiveHandler {
                         ))
                         .collect(Collectors.toList())
         );
+    }
+    
+    private String path(List<String> path) {
+        List<String> list = new ArrayList<>();
+        list.add(category.getCommandName());
+        list.addAll(path);
+        return Joiner.on(" → ").join(list);
     }
     
 }
