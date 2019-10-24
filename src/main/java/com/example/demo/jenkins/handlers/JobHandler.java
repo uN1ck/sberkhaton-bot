@@ -138,12 +138,15 @@ public class JobHandler {
 
     private String logHandler(String jobName, Peer sender) {
         try {
-            String log = jenkinsProvider.getJob(jobName).details().getLastBuild().details().getConsoleOutputText();
-            File f = File.createTempFile("temp-logs-out", ".log");
-            try (FileWriter fw = new FileWriter(f)) {
-                fw.write(log);
+            Build lastBuild = jenkinsProvider.getJob(jobName).details().getLastBuild();
+            if (lastBuild.equals(Build.BUILD_HAS_NEVER_RUN))
+                return String.format("Эта Job `%s` не имеет запусков и логов", jobName);
+
+            File tempFile = File.createTempFile("temp-logs-out", ".log");
+            try (FileWriter tempFileWriter = new FileWriter(tempFile)) {
+                tempFileWriter.write(jenkinsProvider.getJob(jobName).details().getLastBuild().details().getConsoleOutputText());
             }
-            botProvider.getBot().messaging().sendFile(sender, f);
+            botProvider.getBot().messaging().sendFile(sender, tempFile);
             return "Выгрузка лога скоро начнется";
         } catch (Exception e) {
             String errorString = String.format("Не удалось получить лог для последнего билда задачи `%s` :(", jobName);
@@ -153,24 +156,31 @@ public class JobHandler {
 
     }
 
+
     private String startHandler(String jobName, PeerHandler peerHandler) {
         try {
-            //TODO: хз как запускать job
             jenkinsProvider.getJob(jobName).details();
             List<Entity> entities = ImmutableList.of(
-                    new Entity("2", "-2-"),
-                    new Entity("3", "-3-"),
-                    new Entity("4", "-4-")
+                    new Entity("args", "Ручной ввод"),
+                    new Entity("args auto", "Запрашивать")
             );
-
-            peerHandler.requestSelect("Сделай свой выбор",
+            peerHandler.requestSelect("Выбеорите процесс запуска",
                                       entities,
-                                      identifier -> peerHandler.sendMessage("You selected " + identifier));
+                                      identifier -> {
+                                          if (identifier.equals("args")) {
+
+                                          } else if (identifier.equals("args auto")) {
+
+                                          } else {
+                                              peerHandler.sendMessage("А как ты вообще сюда попал? Оо " + identifier);
+                                          }
+                                      });
 
             return PeerHandler.DELAYED_COMMAND;
         } catch (Exception e) {
-            log.error("Не удалось запустить job " + jobName, e);
-            return "Не удалось запустить job " + jobName;
+            String errorString = String.format("Не удалось запустить job `%s` :(", jobName);
+            log.error(errorString, e);
+            return errorString;
         }
     }
 
