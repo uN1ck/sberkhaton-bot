@@ -10,7 +10,7 @@ import java.util.concurrent.Future;
 @Service
 public class RestCallService {
     // TODO: инжектить урл стэша из пропертей
-    private final String stashUrl = "http://localhost:7990";
+    private final String stashUrl = "http://172.30.18.95:7990";
 
     @NonNull
     public Future<Response> call(@NonNull RestCallConfiguration configuration) {
