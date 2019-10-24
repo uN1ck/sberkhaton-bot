@@ -21,8 +21,12 @@ import java.util.concurrent.ExecutionException;
 @Slf4j
 public class StashService {
     private static final String BASE_PATH = "/rest/api/1.0";
+    private static final String USERNAME = "kirekov";
+    private static final String PASSWORD = "1234";
+
     private final RestCallService restCallService;
     private final ResponseParsingService responseParsingService;
+
 
     private String execRequest(RestCallConfiguration configuration) throws StashConnectionException {
         try {
@@ -39,10 +43,10 @@ public class StashService {
     }
 
     @NonNull
-    public List<StashProject> listAllProjects(String username, String password) throws StashConnectionException, StashResponseParsingException {
+    public List<StashProject> listAllProjects() throws StashConnectionException, StashResponseParsingException {
         RestCallConfiguration configuration = RestCallConfiguration.builder()
-                .username(username)
-                .password(password)
+                .username(USERNAME)
+                .password(PASSWORD)
                 .requestType(HttpRequestType.GET)
                 .path(BASE_PATH + "/projects")
                 .build();
@@ -51,10 +55,10 @@ public class StashService {
     }
 
     @NonNull
-    public List<StashRepository> listRepositories(String username, String password, String stashProjectKey) throws StashConnectionException, StashResponseParsingException {
+    public List<StashRepository> listRepositories(String stashProjectKey) throws StashConnectionException, StashResponseParsingException {
         RestCallConfiguration configuration = RestCallConfiguration.builder()
-                .username(username)
-                .password(password)
+                .username(USERNAME)
+                .password(PASSWORD)
                 .requestType(HttpRequestType.GET)
                 .path(BASE_PATH + String.format("/projects/%s/repos", stashProjectKey))
                 .build();

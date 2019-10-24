@@ -1,4 +1,4 @@
-package com.example.demo.jenkins;
+package com.example.demo;
 
 import im.dlg.botsdk.Bot;
 import im.dlg.botsdk.BotConfig;
@@ -18,7 +18,7 @@ public class BotProvider {
         BotConfig botConfig = BotConfig.Builder.aBotConfig()
                                                .withHost("hackathon-mob.transmit.im")
                                                .withPort(443)
-                                               .withToken("").build();
+                                               .withToken("d33eadd7fa9460116631493b5076c2965d614443").build();
 
         bot = Bot.start(botConfig).get();
 

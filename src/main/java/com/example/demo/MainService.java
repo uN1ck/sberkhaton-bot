@@ -14,7 +14,7 @@ import java.util.concurrent.ExecutionException;
 @RequiredArgsConstructor
 public class MainService {
     private final StashService stashService;
-
+/*
     @PostConstruct
     public void main() throws InterruptedException, ExecutionException {
         BotConfig botConfig = BotConfig.Builder.aBotConfig()
@@ -37,5 +37,5 @@ public class MainService {
         );
 
         bot.await();
-    }
+    }*/
 }
