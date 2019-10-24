@@ -2,7 +2,6 @@ package com.example.demo.stash.util;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.format.FormatStyle;
 import java.util.List;
 
 public class Pretty {
@@ -20,6 +19,6 @@ public class Pretty {
     }
 
     public static String toString(LocalDateTime localDateTime) {
-        return localDateTime.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT));
+        return localDateTime.format(DateTimeFormatter.ofPattern("HH:mm dd-MM-yy"));
     }
 }

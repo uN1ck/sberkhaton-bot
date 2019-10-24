@@ -12,7 +12,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -105,15 +106,16 @@ public class ResponseParsingService {
         Map<String, Object> fromRef = (Map<String, Object>) map.get("fromRef");
         Map<String, Object> toRef = (Map<String, Object>) map.get("toRef");
 
+
         return PullRequest.builder()
                 .authorDisplayName((String) author.get("displayName"))
                 .authorEmail((String) author.get("emailAddress"))
-                .creationDate(LocalDateTime.ofInstant(Instant.ofEpochSecond(
+                .creationDate(LocalDateTime.ofInstant(Instant.ofEpochMilli(
                         Long.parseLong(map.get("createdDate").toString())
-                ), ZoneOffset.UTC))
-                .updatedDate(LocalDateTime.ofInstant(Instant.ofEpochSecond(
+                ), ZoneId.systemDefault()))
+                .updatedDate(LocalDateTime.ofInstant(Instant.ofEpochMilli(
                         Long.parseLong(map.get("updatedDate").toString())
-                ), ZoneOffset.UTC))
+                ), ZoneId.systemDefault()))
                 .title((String) map.get("title"))
                 .id(Long.parseLong(map.get("id").toString()))
                 .fromBranch((String) fromRef.get("displayId"))
