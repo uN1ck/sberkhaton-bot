@@ -3,6 +3,7 @@ package com.example.demo.jenkins.handlers;
 import com.example.demo.jenkins.JenkinsProvider;
 import com.offbytwo.jenkins.model.Job;
 import im.dlg.botsdk.domain.Message;
+import im.dlg.botsdk.domain.Peer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -15,8 +16,8 @@ public class JenkinsHandler {
     private final JenkinsProvider jenkinsProvider;
 
     @Nullable
-    public String onMessage(Message message) {
-        String tail = message.getText().replace("/jobs", "").trim();
+    public String onMessage(Peer peer, String message) {
+        String tail = message.replace("/jobs", "").trim();
         if (tail.matches("^status$")) {
             return statusHandler();
         } else if (tail.matches("^list.*$")) {
