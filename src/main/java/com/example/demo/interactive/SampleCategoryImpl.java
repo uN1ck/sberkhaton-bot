@@ -44,6 +44,11 @@ public class SampleCategoryImpl implements Category {
                     new Entity("srv2", "Не мой сервак", false)
             );
         
+        if(previous.length == 1)
+            return ImmutableList.of(
+                    new Entity("sub", "Некст левел", true)
+            );
+        
         return ImmutableList.of(
                 new Entity("kek1", "В подпапке", false),
                 new Entity("kek2", "Ещё сервер", false),

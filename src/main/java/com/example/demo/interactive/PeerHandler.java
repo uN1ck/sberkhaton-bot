@@ -114,6 +114,10 @@ public class PeerHandler implements MessageListener, InteractiveEventListener {
     }
     
     protected void renderButtons(List<Button> buttons) {
+        renderButtons(null, buttons);
+    }
+    
+    protected void renderButtons(String title, List<Button> buttons) {
         List<InteractiveAction> actions = new ArrayList<>();
         
         for(Button button : buttons) {
@@ -128,7 +132,7 @@ public class PeerHandler implements MessageListener, InteractiveEventListener {
             ));
         }
 
-        InteractiveGroup group = new InteractiveGroup(actions);
+        InteractiveGroup group = new InteractiveGroup(null, title, actions);
         rootHandler.getBotProvider().getBot().interactiveApi().send(peer, group);
     }
     

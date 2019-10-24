@@ -4,7 +4,7 @@ import com.example.demo.interactive.action.*;
 import com.example.demo.interactive.model.Action;
 import com.example.demo.interactive.model.Button;
 import com.example.demo.interactive.model.Entity;
-import com.google.common.collect.ImmutableList;
+import com.google.common.base.Joiner;
 import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
@@ -40,7 +40,7 @@ public class CategoryInteractiveHandler {
         List<Button> buttons = new ArrayList<>();
         
         buttons.add(new Button(
-                new ListAction(category.getCommand(), "", ImmutableList.of()),
+                new ListAction(category.getCommand(), ""),
                 category.getListButtonName()
         ));
         
@@ -61,7 +61,7 @@ public class CategoryInteractiveHandler {
     private void requestFilter(FilterRequestAction parent) {
         peerHandler.requestText(
                 "Введите фильтр для поиска", 
-                text -> handle(new ListAction(category.getCommand(), text, ImmutableList.of()))
+                text -> handle(new ListAction(category.getCommand(), text))
         );
     }
     
@@ -69,11 +69,12 @@ public class CategoryInteractiveHandler {
         List<Entity> entities = category.listEntities(parent.getFilter(), parent.getPath().toArray(new String[0]));
         
         this.peerHandler.renderButtons(
+                Joiner.on(" → ").join(parent.getDisplayPath()),
                 entities.stream()
                         .map(entity -> {
                             ButtonAction action = new EntityAction(category.getCommand(), entity.getIdentifier());
                             if(entity.isFolder())
-                                action = parent.getChild(entity.getIdentifier());
+                                action = parent.getChild(entity);
                             
                             return new Button(
                                 action,
