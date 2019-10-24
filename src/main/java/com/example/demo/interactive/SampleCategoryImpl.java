@@ -21,7 +21,7 @@ public class SampleCategoryImpl implements Category {
 
     @Override
     public String getCommandName() {
-        return "Сампле";
+        return "CSM";
     }
 
     @Override
@@ -50,8 +50,8 @@ public class SampleCategoryImpl implements Category {
             );
         
         return ImmutableList.of(
-                new Entity("kek1", "В подпапке", false),
-                new Entity("kek2", "Ещё сервер", false),
+                new Entity("kek1", "В подвале", false),
+                new Entity("kek2", "Ещё один", false),
                 new Entity("kek3", "Ну и ещё один", false)
         );
     }

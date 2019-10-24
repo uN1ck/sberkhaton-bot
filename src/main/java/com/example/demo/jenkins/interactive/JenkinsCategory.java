@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -30,12 +31,12 @@ public class JenkinsCategory implements Category {
 
     @Override
     public String getCommandName() {
-        return "Джобы";
+        return "Jenkins";
     }
 
     @Override
     public String getListButtonName() {
-        return "Джобы";
+        return "Jobs";
     }
 
     @Override
@@ -49,6 +50,8 @@ public class JenkinsCategory implements Category {
     public List<Entity> listEntities(String pattern, String[] previous) {
         List<JobDto> jobs;
         if (pattern.length() > 0) {
+            if (previous.length > 0)
+                return Collections.emptyList();
             jobs = jenkinsProvider.getFilteredJobs(pattern);
         } else {
             if (previous.length == 0) {
