@@ -23,19 +23,19 @@ import java.util.*;
 @Slf4j
 @RequiredArgsConstructor
 public class PeerHandler implements MessageListener, InteractiveEventListener {
-    
+
     public static final String DELAYED_COMMAND = "~DELAYED~";
 
     private final RootHandler rootHandler;
     @Getter
     private final Peer peer;
-    
+
     private final Map<String, CategoryInteractiveHandler> handlers = new HashMap<>();
-    
+
     private final Map<UUID, ButtonAction> actionsCache = new HashMap<>();
-    
+
     private PeerInputHandler activeTextRequest = null;
-    
+
     private PeerInputHandler activeSelectHandler = null;
     private String activeSelectIdentifier = null;
 
@@ -45,20 +45,20 @@ public class PeerHandler implements MessageListener, InteractiveEventListener {
     }
 
     public void onMessage(String message) {
-        if(!message.startsWith("/")) {
+        if (!message.startsWith("/")) {
             activeTextRequest.accept(message);
             activeTextRequest = null;
             return;
         }
         activeTextRequest = null;
-        
-        if(message.equals("/start")) {
+
+        if (message.equals("/start")) {
             start();
             return;
         }
 
         String response = null;
-        if(message.startsWith("/sample")) {
+        if (message.startsWith("/sample")) {
             response = rootHandler.getSample().onMessage(this, message);
         } else if (message.matches("^/jobs.*")) {
             response = rootHandler.getJenkinsCategory().onMessage(this, message);
@@ -66,45 +66,46 @@ public class PeerHandler implements MessageListener, InteractiveEventListener {
             response = rootHandler.getStashHandler().onMessage(peer, message);
         }
 
-        if(response == null || !response.equals(DELAYED_COMMAND)) {
+        if (response == null || !response.equals(DELAYED_COMMAND)) {
             rootHandler.getBotProvider().getBot().messaging().sendText(
                     peer,
                     Optional.ofNullable(response).orElse("Нет такой команды :) " + message)
             );
         }
     }
-    
+
     public void start() {
         List<Button> buttons = new ArrayList<>();
-        for(Category category : rootHandler.getCategories())
+        for (Category category : rootHandler.getCategories())
             buttons.add(new Button(new CategoryAction(category.getCommand()), category.getCommandName()));
 
         renderButtons(buttons);
     }
-    
+
     @Override
     public void onEvent(InteractiveEvent event) {
-        if(event.getId().startsWith("request_")) {
-            if(activeSelectHandler != null && event.getId().startsWith(activeSelectIdentifier)) {
-                activeSelectHandler.accept(event.getValue());
+        if (event.getId().startsWith("request_")) {
+            if (activeSelectHandler != null && event.getId().startsWith(activeSelectIdentifier)) {
+                PeerInputHandler local = activeSelectHandler;
                 activeSelectHandler = null;
+                local.accept(event.getValue());
             }
             return;
         }
         activeSelectHandler = null;
-        
+
         UUID uuid = UUID.fromString(event.getValue());
         log.info("Received action {}", uuid);
 
         ButtonAction action = actionsCache.get(uuid);
-        if(action != null) {
+        if (action != null) {
             CategoryInteractiveHandler handler = handlers.computeIfAbsent(action.getOwner(), a -> {
                 Category category = rootHandler.getCategories()
                                                .stream()
                                                .filter(cat -> cat.getCommand().equals(a))
                                                .findAny()
                                                .orElse(null);
-                if(category == null)
+                if (category == null)
                     throw new IllegalStateException();
 
                 return new CategoryInteractiveHandler(this, category);
@@ -114,22 +115,22 @@ public class PeerHandler implements MessageListener, InteractiveEventListener {
             throw new NullPointerException();
         }
     }
-    
+
     protected void renderButtons(List<Button> buttons) {
         renderButtons(null, buttons);
     }
-    
+
     protected void renderButtons(String title, List<Button> buttons) {
         List<InteractiveAction> actions = new ArrayList<>();
-        
-        for(Button button : buttons) {
+
+        for (Button button : buttons) {
             UUID uuid = UUID.randomUUID();
             actionsCache.put(uuid, button.getAction());
-            
+
             log.info("Stored action {} {}", uuid, button.getAction());
-            
+
             actions.add(new InteractiveAction(
-                    "action_" + uuid, 
+                    "action_" + uuid,
                     new InteractiveButton(uuid.toString(), button.getDisplayName())
             ));
         }
@@ -137,20 +138,20 @@ public class PeerHandler implements MessageListener, InteractiveEventListener {
         InteractiveGroup group = new InteractiveGroup(null, title, actions);
         rootHandler.getBotProvider().getBot().interactiveApi().send(peer, group);
     }
-    
+
     public void requestText(String message, PeerInputHandler handler) {
         rootHandler.getBotProvider().getBot().messaging().sendText(peer, message);
         activeTextRequest = handler;
     }
-    
+
     public void requestSelect(String message, List<Entity> entities, PeerInputHandler handler) {
         activeSelectHandler = handler;
         activeSelectIdentifier = "request_" + UUID.randomUUID();
-        
+
         List<InteractiveAction> actions = new ArrayList<>();
         int counter = 0;
-        
-        for(Entity button : entities) {
+
+        for (Entity button : entities) {
             actions.add(new InteractiveAction(
                     activeSelectIdentifier + counter,
                     new InteractiveButton(button.getIdentifier(), button.getDisplayName())
@@ -161,9 +162,9 @@ public class PeerHandler implements MessageListener, InteractiveEventListener {
         InteractiveGroup group = new InteractiveGroup(null, message, actions);
         rootHandler.getBotProvider().getBot().interactiveApi().send(peer, group);
     }
-    
+
     public void sendMessage(String message) {
         rootHandler.getBotProvider().getBot().messaging().sendText(peer, message);
     }
-    
+
 }
