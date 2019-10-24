@@ -16,7 +16,7 @@ public class Entity {
     }
     
     public String getDisplayNameWithIcon() {
-        if(folder) return "\uD83D\uDDC0 " + displayName;
+        if(folder) return "\uD83D\uDCC1 " + displayName;
         return displayName;
     }
 
