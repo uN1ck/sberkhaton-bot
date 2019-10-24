@@ -8,12 +8,16 @@ import java.util.UUID;
 
 @Getter
 @RequiredArgsConstructor
-public class CategoryAction implements ButtonAction {
-    
-    private final ButtonAction previous;
-    private final String owner;
-    
+public class FavouriteAction implements ButtonAction {
+
+    private final EntityAction previous;
+
     @Setter
     private UUID uuid;
 
+    @Override
+    public String getOwner() {
+        return previous.getOwner();
+    }
+    
 }
