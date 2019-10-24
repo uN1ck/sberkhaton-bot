@@ -3,6 +3,7 @@ package com.example.demo.interactive;
 import com.example.demo.RootHandler;
 import com.example.demo.interactive.action.ButtonAction;
 import com.example.demo.interactive.action.CategoryAction;
+import com.example.demo.interactive.action.StartAction;
 import com.example.demo.interactive.input.PeerInputHandler;
 import com.example.demo.interactive.model.Button;
 import com.example.demo.interactive.model.Entity;
@@ -14,6 +15,8 @@ import im.dlg.botsdk.domain.interactive.InteractiveButton;
 import im.dlg.botsdk.domain.interactive.InteractiveGroup;
 import im.dlg.botsdk.light.InteractiveEventListener;
 import im.dlg.botsdk.light.MessageListener;
+import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,7 +28,9 @@ public class PeerHandler implements MessageListener, InteractiveEventListener {
     
     public static final String DELAYED_COMMAND = "~DELAYED~";
 
+    @Getter(AccessLevel.PROTECTED)
     private final RootHandler rootHandler;
+    @Getter
     private final Peer peer;
     
     private final Map<String, CategoryInteractiveHandler> handlers = new HashMap<>();
@@ -51,7 +56,7 @@ public class PeerHandler implements MessageListener, InteractiveEventListener {
         activeTextRequest = null;
         
         if(message.equals("/start")) {
-            start();
+            handleAction(new StartAction(rootHandler.getCategories().get(0).getCommand()));
             return;
         }
 
@@ -72,14 +77,6 @@ public class PeerHandler implements MessageListener, InteractiveEventListener {
         }
     }
     
-    public void start() {
-        List<Button> buttons = new ArrayList<>();
-        for(Category category : rootHandler.getCategories())
-            buttons.add(new Button(new CategoryAction(category.getCommand()), category.getCommandName()));
-
-        renderButtons(buttons);
-    }
-    
     @Override
     public void onEvent(InteractiveEvent event) {
         if(event.getId().startsWith("request_")) {
@@ -93,8 +90,11 @@ public class PeerHandler implements MessageListener, InteractiveEventListener {
         
         UUID uuid = UUID.fromString(event.getValue());
         log.info("Received action {}", uuid);
-
-        ButtonAction action = actionsCache.get(uuid);
+        
+        handleAction(actionsCache.get(uuid));
+    }
+    
+    private void handleAction(ButtonAction action) {
         if(action != null) {
             CategoryInteractiveHandler handler = handlers.computeIfAbsent(action.getOwner(), a -> {
                 Category category = rootHandler.getCategories()
@@ -113,16 +113,23 @@ public class PeerHandler implements MessageListener, InteractiveEventListener {
         }
     }
     
-    protected void renderButtons(List<Button> buttons) {
-        renderButtons(null, buttons);
+    protected void renderButtons(ButtonAction action, List<Button> buttons) {
+        renderButtons(action, null, buttons);
     }
     
-    protected void renderButtons(String title, List<Button> buttons) {
-        List<InteractiveAction> actions = new ArrayList<>();
+    protected void renderButtons(ButtonAction action, String title, List<Button> buttons) {
+        if(action != null && action.getPrevious() != null) {
+            buttons = new ArrayList<>(buttons);
+            buttons.add(new Button(action.getPrevious(), "⬅️"));
+        }
         
+        List<InteractiveAction> actions = new ArrayList<>();
         for(Button button : buttons) {
-            UUID uuid = UUID.randomUUID();
-            actionsCache.put(uuid, button.getAction());
+            UUID uuid = button.getAction().getUuid();
+            if(uuid == null) {
+                uuid = UUID.randomUUID();
+                actionsCache.put(uuid, button.getAction());
+            }
             
             log.info("Stored action {} {}", uuid, button.getAction());
             

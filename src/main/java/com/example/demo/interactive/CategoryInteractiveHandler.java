@@ -18,7 +18,9 @@ public class CategoryInteractiveHandler {
     private final Category category;
     
     public void handle(ButtonAction action) {
-        if(action instanceof InvokeAction) {
+        if(action instanceof StartAction) {
+            start((StartAction)action);
+        } else if(action instanceof InvokeAction) {
             invoke((InvokeAction)action);
         } else if(action instanceof CategoryAction) {
             // Основное меню или избранное
@@ -32,6 +34,16 @@ public class CategoryInteractiveHandler {
         }
     }
     
+    private void start(StartAction action) {
+        this.peerHandler.renderButtons(action, peerHandler.getRootHandler()
+                                                          .getCategories()
+                                                          .stream()
+                                                          .map(cat -> new Button(new CategoryAction(
+                                                                  action, cat.getCommand()), cat.getCommandName()
+                                                          ))
+                                                          .collect(Collectors.toList()));
+    }
+    
     private void invoke(InvokeAction parent) {
         this.peerHandler.onMessage(parent.getCommand());
     }
@@ -40,12 +52,12 @@ public class CategoryInteractiveHandler {
         List<Button> buttons = new ArrayList<>();
         
         buttons.add(new Button(
-                new ListAction(category.getCommand(), ""),
+                new ListAction(parent, category.getCommand(), ""),
                 category.getListButtonName()
         ));
         
         buttons.add(new Button(
-                new FilterRequestAction(category.getCommand()),
+                new FilterRequestAction(parent, category.getCommand()),
                 category.getListButtonName() + " (фильтр)"
         ));
         
@@ -55,13 +67,13 @@ public class CategoryInteractiveHandler {
                     cmd.getDisplayName()
             ));
         
-        this.peerHandler.renderButtons(buttons);
+        this.peerHandler.renderButtons(parent, buttons);
     }
     
     private void requestFilter(FilterRequestAction parent) {
         peerHandler.requestText(
                 "Введите фильтр для поиска", 
-                text -> handle(new ListAction(category.getCommand(), text))
+                text -> handle(new ListAction(parent.getPrevious(), category.getCommand(), text))
         );
     }
     
@@ -69,12 +81,16 @@ public class CategoryInteractiveHandler {
         List<Entity> entities = category.listEntities(parent.getFilter(), parent.getPath().toArray(new String[0]));
         
         this.peerHandler.renderButtons(
+                parent,
                 Joiner.on(" → ").join(parent.getDisplayPath()),
                 entities.stream()
                         .map(entity -> {
-                            ButtonAction action = new EntityAction(category.getCommand(), entity.getIdentifier());
-                            if(entity.isFolder())
+                            ButtonAction action;
+                            if(entity.isFolder()) {
                                 action = parent.getChild(entity);
+                            } else {
+                                action = new EntityAction(parent, category.getCommand(), entity.getIdentifier());
+                            }
                             
                             return new Button(
                                 action,
@@ -86,6 +102,7 @@ public class CategoryInteractiveHandler {
     
     private void renderEntityActions(EntityAction parent) {
         this.peerHandler.renderButtons(
+                parent,
                 category.getEntityCommands()
                         .stream()
                         .map(action -> new Button(
