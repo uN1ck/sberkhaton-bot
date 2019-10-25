@@ -29,7 +29,7 @@ public class JenkinsProviderImpl implements JenkinsProvider {
     @PostConstruct
     private void init() {
         try {
-            jenkinsServer = new JenkinsServer(new URI("http://172.30.18.91:8080"),
+            jenkinsServer = new JenkinsServer(new URI("http://172.30.18.228:8080"),
                                               "admin",
                                               "11629d94574d44abbadc56d31b2104304f");
 

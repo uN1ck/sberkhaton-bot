@@ -27,7 +27,6 @@ public class CommonEventSubscription extends Subscription {
             BuildWithDetails buildWithDetails = jobWithDetails.getLastBuild().details();
             int newLastBuild = buildWithDetails.getNumber();
 
-
             if (lastBuildId != buildWithDetails.getNumber()) {
                 lastBuildId = newLastBuild;
                 String response = formatMessage(jobWithDetails, buildWithDetails);
@@ -47,7 +46,7 @@ public class CommonEventSubscription extends Subscription {
     private String formatMessage(JobWithDetails jobWithDetails, BuildWithDetails buildWithDetails) {
         String fullName = jobFullName(jobWithDetails);
         String buildResult = buildWithDetails.getResult().name();
-        int buildNumber = buildWithDetails.getNumber();
+        Integer buildNumber = buildWithDetails.getNumber();
         Map<String, String> params = buildWithDetails.getParameters();
         String result = String.format("Job `%s` (%d)\nСтатус: %s\nПараметры: %s", fullName, buildNumber, buildResult,
                                       Arrays.toString(params.entrySet().toArray()));
