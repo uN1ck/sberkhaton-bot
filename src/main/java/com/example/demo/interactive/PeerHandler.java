@@ -75,6 +75,8 @@ public class PeerHandler implements MessageListener, InteractiveEventListener {
             response = rootHandler.getStashHandler().onMessage(peer, message);
         } else if (message.matches("^//stash.*")) {
             response = rootHandler.getStashCategory().onMessage(this, message);
+        }else if (message.matches("^/csm.*")) {
+            response = rootHandler.getCsmCategory().onMessage(this, message);
         }
 
         if (response == null || !response.equals(DELAYED_COMMAND))

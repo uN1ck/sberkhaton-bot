@@ -1,6 +1,7 @@
 package com.example.demo.csm.service;
 
 import com.example.demo.interactive.Category;
+import com.example.demo.interactive.PeerHandler;
 import com.example.demo.interactive.model.Action;
 import com.example.demo.interactive.model.Entity;
 import com.google.common.collect.ImmutableList;
@@ -62,8 +63,22 @@ public class CsmCategoryImpl implements Category {
                 new Action("/csm server %s", "Статус"),
                 new Action("/csm server %s options", "Опции"),
                 new Action("/csm server %s modules", "Модули")
-                );
+        );
     }
 
+    public String onMessage(PeerHandler peerHandler, String message) {
+        List<Entity> entities = ImmutableList.of(
+                new Entity("A", "-A-"),
+                new Entity("B", "-B-"),
+                new Entity("C", "-C-")
+        );
+       // List<Entity> entities = new ArrayList<>();
 
+
+        peerHandler.requestSelect("Сделай свой выбор", entities, identifier -> {
+            peerHandler.sendMessage("You selected " + identifier);
+        });
+
+        return PeerHandler.DELAYED_COMMAND;
+    }
 }

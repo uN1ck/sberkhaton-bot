@@ -1,5 +1,6 @@
 package com.example.demo.csm.service;
 
+import com.example.demo.BotProvider;
 import com.example.demo.csm.data.entity.Cluster;
 import com.example.demo.csm.data.entity.system.MetaInf;
 import com.example.demo.csm.data.entity.wildfly.Module;
@@ -48,13 +49,12 @@ public class CsmRequestService {
     private Map<UUID, Command> storage;
     @Getter
     private List<Entity> printNames;
-    @Setter
     private Bot bot;
     private ApplicationContext context;
 
     @Autowired
-    public CsmRequestService(ApplicationContext context) {
-        this.context = context;
+    public CsmRequestService(BotProvider botProvider) {
+        this.bot = botProvider.getBot();
         watcher = new ConcurrentHashMap<>();
         storage = new ConcurrentHashMap<>();
         printNames = new ArrayList<>();
@@ -87,7 +87,7 @@ public class CsmRequestService {
                                                         + casted.getDomainName() + ":" + casted.getPort() + "\" ] завершена со статусом [ \""
                                                         + singleResult.getStatus() + "\" ] за [ \"" + singleResult.getTime() + "ms \" ]";
                                             } else {
-                                                res = "Команда" + casted.getCommand() + " на [ \"" + casted.getDeploymentName() + "\" ] на сервере [ \""
+                                                res = "Команда " + casted.getCommand() + " на [ \"" + casted.getDeploymentName() + "\" ] на сервере [ \""
                                                         + casted.getDomainName() + ":" + casted.getPort() + "\" ] завершена со статусом [ \""
                                                         + singleResult.getStatus() + "\" ] за [ \"" + singleResult.getTime() + "ms \" ]";
                                             }
@@ -200,7 +200,7 @@ public class CsmRequestService {
                     String res = "";
                     for (WildFlyGroup group : cluster.getGroups()) {
                         for (WildFlyNode node : group.getNodes()) {
-                            res += String.format("[ WF \"%s:%d\" ] \n[ из группы: \"%s\" ] \n[ запущен: \"%b\" ]\n [ завис: \"%b\" ]\n [ данные получены за: \"%d\" мс ] \n[ онлайн: \"%d sec\" ] \n[ память: \"%d of %d mb\" ]\n",
+                            res += String.format("[ WF \"%s:%d\" ] \n  \t[ из группы: \"%s\" ] \n  \t[ запущен: \"%b\" ]\n \t[ завис: \"%b\" ]\n \t[ данные получены за: \"%d\" мс ] \n\t[ онлайн: \"%d sec\" ] \n\t[ память: \"%d of %d mb\" ]\n",
                                     node.getDomainName(), node.getPort(), group.getName(), node.isReachable(),
                                     node.isPending(), node.getLastPing(), node.getUptime() / 1000,
                                     node.getHeapUsed() / 1000 / 1000, node.getHeapMax() / 1000 / 1000);
@@ -262,7 +262,7 @@ public class CsmRequestService {
             boolean found = false;
             for (Module m : node.getModules()) {
                 if (m.getName().equals(deploymentName)) {
-                    res += String.format("[ Имя деплоймента: \"%s\" ] [ имя исполняемого файла: \"%s\" ] [ запущен: \"%s\" ] [ статус: \"%s\" ]\n",  m.getName(), m.getRuntimeName(), m.getEnabled(), m.getStatus());
+                    res += String.format("[ Имя деплоймента: \"%s\" ] [ имя исполняемого файла: \"%s\" ] [ запущен: \"%s\" ] [ статус: \"%s\" ]\n", m.getName(), m.getRuntimeName(), m.getEnabled(), m.getStatus());
                     found = true;
                     break;
                 }
@@ -367,11 +367,11 @@ public class CsmRequestService {
                             watcher.put(fromCsm, peer);
                             storage.put(fromCsm, cm);
                         }
-                    return "Операция по остановке модуля [ \"" + deploymentName + "\" ] на сервере [ \"" + hostPort + "\" ] начата";
+                    return "Операция " + commandType + " модуля [ \"" + deploymentName + "\" ] на сервере [ \"" + hostPort + "\" ] начата";
                 } else if (response.getStatusLine().getStatusCode() == 404) {
                     return "CSM недоступен =(";
                 } else {
-                    return "Операция по остановке модуля [ \"" + deploymentName + "\" ] на сервере [ \"" + hostPort + "\" ] не начата";
+                    return "Операция " + commandType + " модуля [ \"" + deploymentName + "\" ] на сервере [ \"" + hostPort + "\" ] не начата";
                 }
             } catch (IOException e) {
                 e.printStackTrace();

@@ -1,6 +1,7 @@
 package com.example.demo.csm.service;
 
 import com.example.demo.csm.data.CsmCommand;
+import com.example.demo.interactive.PeerHandler;
 import im.dlg.botsdk.domain.Message;
 import im.dlg.botsdk.domain.Peer;
 import org.springframework.beans.factory.annotation.Autowired;

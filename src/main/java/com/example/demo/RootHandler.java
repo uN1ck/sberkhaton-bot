@@ -1,5 +1,7 @@
 package com.example.demo;
 
+import com.example.demo.csm.service.CsmCategoryImpl;
+import com.example.demo.csm.service.CsmRoutingService;
 import com.example.demo.interactive.Category;
 import com.example.demo.interactive.PeerHandler;
 import com.example.demo.interactive.SampleCategoryImpl;
@@ -37,7 +39,7 @@ public class RootHandler implements MessageListener, InteractiveEventListener {
     private final SampleCategoryImpl sample;
 private final StashCategory stashCategory;
     private final Map<Integer, PeerHandler> peerHandlers = new HashMap<>();
-    private final CsmRoutingService csmRoutingService;
+    private final CsmCategoryImpl csmCategory;
 
     @PostConstruct
     private void init() {
