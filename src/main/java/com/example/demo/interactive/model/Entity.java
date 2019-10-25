@@ -11,6 +11,10 @@ public class Entity {
     private final String displayName;
     private final boolean folder;
     
+    public Entity(String identifier, String displayName) {
+        this(identifier, displayName, false);
+    }
+    
     public String getDisplayNameWithIcon() {
         if(folder) return "\uD83D\uDDC0 " + displayName;
         return displayName;

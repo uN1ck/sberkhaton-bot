@@ -1,63 +1,68 @@
 package com.example.demo;
 
-import com.example.demo.csm.service.CsmRequestService;
-import com.example.demo.csm.service.CsmRoutingService;
-import com.example.demo.interactive.Interactive;
+import com.example.demo.interactive.Category;
+import com.example.demo.interactive.PeerHandler;
+import com.example.demo.interactive.SampleCategoryImpl;
 import com.example.demo.jenkins.handlers.JenkinsHandler;
 import com.example.demo.stash.handler.StashHandler;
+import im.dlg.botsdk.domain.InteractiveEvent;
 import im.dlg.botsdk.domain.Message;
 import im.dlg.botsdk.domain.Peer;
+import im.dlg.botsdk.light.InteractiveEventListener;
 import im.dlg.botsdk.light.MessageListener;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.util.Optional;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
+@Getter
 @RequiredArgsConstructor
-public class RootHandler implements MessageListener {
+public class RootHandler implements MessageListener, InteractiveEventListener {
+
     private final BotProvider botProvider;
-    private final Interactive interactive;
-    
+    private final List<Category> categories;
+
     private final JenkinsHandler jenkinsHandler;
     private final StashHandler stashHandler;
+
+    private final SampleCategoryImpl sample;
+
+    private final Map<Integer, PeerHandler> peerHandlers = new HashMap<>();
     private final CsmRoutingService csmRoutingService;
 
     @PostConstruct
     private void init() {
-        interactive.setRootHandler(this);
-        
         botProvider.getBot().messaging().onMessage(this);
-        botProvider.getBot().interactiveApi().onEvent(interactive);
+        botProvider.getBot().interactiveApi().onEvent(this);
     }
 
     @Override
     public void onMessage(Message message) {
-        onMessage(message.getSender(), message.getText().trim());
+        try {
+            getPeerHandler(message.getPeer()).onMessage(message);
+        } catch(Exception e) {
+            log.error("Error during message processing", e);
+        }
     }
-    
-    public void onMessage(Peer peer, String message) {
-        if(message.equals("/start")) {
-            interactive.start(peer);
-            return;
+
+    @Override
+    public void onEvent(InteractiveEvent event) {
+        try {
+            getPeerHandler(event.getPeer()).onEvent(event);
+        } catch(Exception e) {
+            log.error("Error during interactive event processing", e);
         }
-        
-        String response = null;
-        if (message.matches("^/jobs.*")) {
-            response = jenkinsHandler.onMessage(peer, message);
-        } else if (message.matches("^/stash.*")) {
-            response = stashHandler.onMessage(peer, message);
-        }else if (message.matches("^/csm.*")) {
-            response = csmRoutingService.onMessage(peer, message);
-        }
-        
-        botProvider.getBot().messaging().sendText(
-                peer,
-                Optional.ofNullable(response).orElse("Нет такой команды :) " + message)
-        );
+    }
+
+    private PeerHandler getPeerHandler(Peer peer) {
+        return peerHandlers.computeIfAbsent(peer.getId(), p -> new PeerHandler(this, peer));
     }
     
 }
