@@ -1,7 +1,11 @@
 package com.example.demo.stash.util;
 
 import lombok.NonNull;
-import org.asynchttpclient.*;
+import org.asynchttpclient.AsyncHttpClient;
+import org.asynchttpclient.Dsl;
+import org.asynchttpclient.RequestBuilder;
+import org.asynchttpclient.Response;
+import org.asynchttpclient.request.body.multipart.Part;
 import org.springframework.stereotype.Service;
 
 import java.util.Base64;
@@ -19,12 +23,13 @@ public class RestCallService {
         String encodedCredentials = Base64.getEncoder().encodeToString(
                 (configuration.getUsername() + ":" + configuration.getPassword()).getBytes()
         );
-        Request request = new RequestBuilder(configuration.getRequestType().name())
+        RequestBuilder builder = new RequestBuilder(configuration.getRequestType().name())
                 .addHeader("Content-Type", "application/json")
                 .addHeader("Authorization", "Basic " + encodedCredentials)
-                .setUrl(String.format("%s%s", stashUrl, configuration.getPath()))
-                .build();
-        return client.executeRequest(request);
+                .setUrl(String.format("%s%s", stashUrl, configuration.getPath()));
+        if (configuration.getBody() != null)
+            builder.setBody(configuration.getBody());
+        return client.executeRequest(builder.build());
     }
 
 }

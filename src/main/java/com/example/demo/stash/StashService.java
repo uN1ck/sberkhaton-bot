@@ -1,19 +1,25 @@
 package com.example.demo.stash;
 
+import com.example.demo.stash.dto.PullRequest;
+import com.example.demo.stash.dto.PullRequestShorten;
 import com.example.demo.stash.dto.StashProject;
 import com.example.demo.stash.dto.StashRepository;
 import com.example.demo.stash.exceptions.StashConnectionException;
-import com.example.demo.stash.exceptions.StashResponseParsingException;
 import com.example.demo.stash.parse.ResponseParsingService;
 import com.example.demo.stash.util.HttpRequestType;
+import com.example.demo.stash.util.Json;
 import com.example.demo.stash.util.RestCallConfiguration;
 import com.example.demo.stash.util.RestCallService;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.asynchttpclient.Response;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 @Service
@@ -30,7 +36,8 @@ public class StashService {
 
     private String execRequest(RestCallConfiguration configuration) throws StashConnectionException {
         try {
-            return restCallService.call(configuration).get().getResponseBody();
+            Response response = restCallService.call(configuration).get();
+            return response.getResponseBody();
         } catch (InterruptedException e) {
             String err = "Запрос был прерван";
             log.error(err, e);
@@ -43,7 +50,7 @@ public class StashService {
     }
 
     @NonNull
-    public List<StashProject> listAllProjects() throws StashConnectionException, StashResponseParsingException {
+    public List<StashProject> listAllProjects() {
         RestCallConfiguration configuration = RestCallConfiguration.builder()
                 .username(USERNAME)
                 .password(PASSWORD)
@@ -55,7 +62,19 @@ public class StashService {
     }
 
     @NonNull
-    public List<StashRepository> listRepositories(String stashProjectKey) throws StashConnectionException, StashResponseParsingException {
+    public Optional<StashProject> getProject(String stashProjectKey) {
+        RestCallConfiguration configuration = RestCallConfiguration.builder()
+                .username(USERNAME)
+                .password(PASSWORD)
+                .requestType(HttpRequestType.GET)
+                .path(BASE_PATH + "/projects/" + stashProjectKey)
+                .build();
+        String json = execRequest(configuration);
+        return responseParsingService.getProject(json);
+    }
+
+    @NonNull
+    public List<StashRepository> listRepositories(String stashProjectKey) {
         RestCallConfiguration configuration = RestCallConfiguration.builder()
                 .username(USERNAME)
                 .password(PASSWORD)
@@ -66,4 +85,80 @@ public class StashService {
         return responseParsingService.listRepositories(json);
     }
 
+    @NonNull
+    public Optional<StashRepository> getRepository(String stashProjectKey, String repoName) {
+        RestCallConfiguration configuration = RestCallConfiguration.builder()
+                .username(USERNAME)
+                .password(PASSWORD)
+                .requestType(HttpRequestType.GET)
+                .path(BASE_PATH + String.format("/projects/%s/repos/%s", stashProjectKey, repoName))
+                .build();
+        String json = execRequest(configuration);
+        return responseParsingService.getRepository(json);
+    }
+
+    @NonNull
+    public List<PullRequestShorten> listPullRequests(String stashProjectKey, String repoName) {
+        RestCallConfiguration configuration = RestCallConfiguration.builder()
+                .username(USERNAME)
+                .password(PASSWORD)
+                .requestType(HttpRequestType.GET)
+                .path(BASE_PATH + String.format("/projects/%s/repos/%s/pull-requests",
+                        stashProjectKey,
+                        repoName)
+                )
+                .build();
+        String json = execRequest(configuration);
+        return responseParsingService.listPullRequests(json);
+    }
+
+    public PullRequest getPullRequest(String stashProjectKey, String repoName, String prId) {
+        RestCallConfiguration configuration = RestCallConfiguration.builder()
+                .username(USERNAME)
+                .password(PASSWORD)
+                .requestType(HttpRequestType.GET)
+                .path(BASE_PATH + String.format("/projects/%s/repos/%s/pull-requests/%s",
+                        stashProjectKey,
+                        repoName,
+                        prId)
+                )
+                .build();
+        String json = execRequest(configuration);
+        return responseParsingService.getPullRequest(json);
+    }
+
+    public String mergePullRequest(String stashProjectKey, String repoName, String prId, String prVersion) {
+        RestCallConfiguration configuration = RestCallConfiguration.builder()
+                .username(USERNAME)
+                .password(PASSWORD)
+                .requestType(HttpRequestType.POST)
+                .path(BASE_PATH + String.format("/projects/%s/repos/%s/pull-requests/%s/merge?version=%s",
+                        stashProjectKey,
+                        repoName,
+                        prId,
+                        prVersion)
+                )
+                .build();
+        String json = execRequest(configuration);
+        return responseParsingService.mergePullRequest(json);
+    }
+
+    public String deletePullRequest(String stashProjectKey, String repoName, String prId, String prVersion) {
+        Map<String, Integer> mappedBody = new HashMap<>();
+        mappedBody.put("version", Integer.parseInt(prVersion));
+
+        RestCallConfiguration configuration = RestCallConfiguration.builder()
+                .username(USERNAME)
+                .password(PASSWORD)
+                .requestType(HttpRequestType.DELETE)
+                .path(BASE_PATH + String.format("/projects/%s/repos/%s/pull-requests/%s",
+                        stashProjectKey,
+                        repoName,
+                        prId)
+                )
+                .body(Json.serialize(mappedBody))
+                .build();
+        String json = execRequest(configuration);
+        return responseParsingService.deletePullRequest(json);
+    }
 }

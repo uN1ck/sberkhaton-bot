@@ -5,22 +5,28 @@ import com.example.demo.jenkins.JenkinsProvider;
 import com.example.demo.jenkins.subscriptions.Subscription;
 import im.dlg.botsdk.domain.Peer;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SubscriptionServiceImpl implements SubscriptionService {
+    private static final int REFRESH_RATE = 2500;
     private final Map<Integer, PersonalSubscriptionService> subscriptions;
     private final BotProvider botProvider;
     private final JenkinsProvider jenkinsProvider;
 
-    //TODO: Изменяемо ли значение?
-    @Scheduled(fixedRate = 5000)
+    @Scheduled(fixedRate = REFRESH_RATE)
     public void refreshSubscriptions() {
-        subscriptions.values().forEach(PersonalSubscriptionService::refreshSubscriptions);
+        try {
+            subscriptions.values().forEach(PersonalSubscriptionService::refreshSubscriptions);
+        } catch (Exception e) {
+            log.error("Ошибка при выполнении scheduled", e);
+        }
     }
 
     @Override
